@@ -19,20 +19,39 @@ MOD_BOT_COMMAND_PREFIX="!"
 The Discord application must have the Message Content intent enabled because
 this bot uses prefix commands like `!positions`.
 
+## Install
+
+The project is managed with [uv](https://docs.astral.sh/uv/). From the repo root:
+
+```sh
+uv sync
+```
+
+That creates `.venv`, installs runtime + dev dependencies, and installs this
+project itself so the `discord-mod-bot` console script is available.
+
 ## Run
 
 Start the trading/options webhook server first so `/positions` is available on
-port `5555`, then run:
+port `5555`, then run either:
 
-```powershell
-python -m discord_mod_bot
+```sh
+uv run discord-mod-bot
+# or, equivalently:
+uv run python -m discord_mod_bot
+```
+
+## Test
+
+```sh
+uv run pytest
 ```
 
 ## Configuration (`config.yaml`)
 
-`discord_mod_bot/config.yaml` controls which commands are enabled, who can
-run them, and the Discord webhook URLs the bot posts to. Override the path
-with `MOD_BOT_CONFIG_PATH`.
+`src/discord_mod_bot/config.yaml` controls which commands are enabled, who
+can run them, and the Discord webhook URLs the bot posts to. Override the
+path with `MOD_BOT_CONFIG_PATH`.
 
 ```yaml
 command_prefix: !
@@ -50,7 +69,7 @@ webhooks:
 
 `allowed-by: admin` requires the Discord Administrator guild permission;
 `members` lets anyone in an allowed channel run the command. New commands
-should also register a `CommandSpec` in `discord_mod_bot/bot.py:_SPECS`.
+should also register a `CommandSpec` in `src/discord_mod_bot/bot.py:_SPECS`.
 
 ## Commands
 

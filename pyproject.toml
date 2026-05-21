@@ -1,0 +1,24 @@
+[project]
+name = "discord-mod-bot"
+version = "0.1.0"
+description = "Standalone Discord operator/mod bot that proxies commands to a local webhook server."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "discord-py>=2.7.1",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.2",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+discord-mod-bot = "discord_mod_bot.bot:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.15,<0.12"]
+build-backend = "uv_build"

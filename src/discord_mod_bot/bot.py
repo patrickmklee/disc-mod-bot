@@ -21,9 +21,9 @@ from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
 
-from .commands import CommandArgs, CommandSpec, parse_args
-from .config_loader import YamlConfig, load_yaml_config
-from . import report as report_builder
+from discord_mod_bot.commands import CommandArgs, CommandSpec, parse_args
+from discord_mod_bot.config_loader import YamlConfig, load_yaml_config
+from discord_mod_bot import report as report_builder
 
 
 LOG = logging.getLogger("discord_mod_bot")

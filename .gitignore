@@ -1,2 +1,8 @@
 .env
+.claude/
 __pycache__/
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
