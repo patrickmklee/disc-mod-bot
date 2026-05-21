@@ -1,0 +1,25 @@
+#! Bot command configuration
+command_prefix: !
+commands:
+  positions:
+    enabled: true
+    allowed-by: admin
+  health:
+    enabled: true
+    allowed-by: members
+  report:
+    enabled: true
+    allowed-by: admin
+  close:
+    enabled: true
+    allowed-by: admin
+
+webhooks:
+  report:
+    enabled: true
+    name: Bikini Bottom News
+    url: webhooks/1494569062674726912/LzDYvTNamyEHk5iiAMkXxoeDq7nmU6s07Sbn367anRsYAVkmIjKu7cMbcNXT41T4tJXd
+  training:
+    enabled: true
+    name: Patrick
+    url: webhooks/1494116796222148678/aLMuGeWTQKbY3l72zwtODhUJJWgV6ROe5NlqQc1_w4IwpyxNZ9_ILXSnSXE36exaaIkG" 
