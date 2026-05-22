@@ -17,7 +17,12 @@ from discord_mod_bot.report import (
 	MAX_TICKER_ROWS,
 	MAX_TRADE_ROWS,
 	build_report_embed,
+	filter_trades_by_channel,
+	filter_trades_by_field,
+	filter_trades_by_strategy,
+	filter_trades_by_symbol,
 	filter_trades_to_window,
+	resolve_custom_window,
 	resolve_window,
 )
 
@@ -156,6 +161,134 @@ def test_filter_trades_to_window_week_keeps_full_week():
 		# Sunday 22:30 ET == Monday 02:30 UTC, just before the
 		# Monday-00:00-ET (== 04:00 UTC) window boundary.
 		{"id": 4, "exit_time": _et_iso(2026, 5, 17, 22, 30)},
+	]
+
+	kept = filter_trades_to_window(trades, window)
+
+	assert sorted(t["id"] for t in kept) == [1, 2]
+
+
+# ---------------------------------------------------------------------------
+# filter_trades_by_{symbol,strategy,channel} / filter_trades_by_field
+# ---------------------------------------------------------------------------
+
+def test_filter_trades_by_symbol_keeps_case_insensitive_matches():
+	trades = [
+		{"id": 1, "ticker": "AMD"},
+		{"id": 2, "ticker": "amd"},
+		{"id": 3, "ticker": "NVDA"},
+		{"id": 4, "ticker": "  AMD  "},
+	]
+
+	kept = filter_trades_by_symbol(trades, "amd")
+
+	assert [t["id"] for t in kept] == [1, 2, 4]
+
+
+def test_filter_trades_by_symbol_empty_arg_is_passthrough():
+	trades = [{"id": 1, "ticker": "AMD"}, {"id": 2, "ticker": "NVDA"}]
+	# Empty string and whitespace both leave the list unchanged so callers
+	# can apply the filter unconditionally.
+	assert filter_trades_by_symbol(trades, "") is trades
+	assert filter_trades_by_symbol(trades, "   ") is trades
+
+
+def test_filter_trades_by_strategy_drops_rows_missing_field():
+	trades = [
+		{"id": 1, "strategy": "momentum"},
+		{"id": 2, "strategy": "Momentum"},
+		{"id": 3, "strategy": "reversal"},
+		{"id": 4},                          # field missing
+		{"id": 5, "strategy": None},        # explicit null
+	]
+
+	kept = filter_trades_by_strategy(trades, "momentum")
+
+	assert [t["id"] for t in kept] == [1, 2]
+
+
+def test_filter_trades_by_channel_matches_signal_source():
+	trades = [
+		{"id": 1, "channel": "alerts-spx"},
+		{"id": 2, "channel": "ALERTS-SPX"},
+		{"id": 3, "channel": "alerts-tech"},
+	]
+
+	kept = filter_trades_by_channel(trades, "alerts-spx")
+
+	assert [t["id"] for t in kept] == [1, 2]
+
+
+def test_filter_trades_by_field_returns_input_on_empty_target():
+	trades = [{"id": 1, "foo": "bar"}]
+	assert filter_trades_by_field(trades, "foo", "") is trades
+
+
+# ---------------------------------------------------------------------------
+# resolve_custom_window
+# ---------------------------------------------------------------------------
+
+def test_resolve_custom_window_date_range_spans_full_days():
+	window = resolve_custom_window("2026-05-15", "2026-05-18", now=NOW_UTC)
+
+	assert window is not None
+	assert window.period == "custom"
+	assert window.label == "2026-05-15 -> 2026-05-18"
+	# May is EDT (UTC-4): midnight ET == 04:00 UTC.
+	assert window.start_iso_utc == "2026-05-15T04:00:00+00:00"
+	end_utc = window.end_et.astimezone(timezone.utc)
+	# End-of-day ET (23:59:59.999999) on the 18th is just before midnight UTC of the 19th.
+	assert end_utc.year == 2026 and end_utc.month == 5 and end_utc.day == 19
+	assert end_utc.hour == 3 and end_utc.minute == 59
+
+
+def test_resolve_custom_window_until_defaults_to_now():
+	window = resolve_custom_window("2026-05-18", now=NOW_UTC)
+
+	assert window is not None
+	assert window.start_iso_utc == "2026-05-18T04:00:00+00:00"
+	assert window.end_et.astimezone(timezone.utc) == NOW_UTC
+
+
+def test_resolve_custom_window_same_day_uses_single_date_label():
+	window = resolve_custom_window("2026-05-20", "2026-05-20", now=NOW_UTC)
+
+	assert window is not None
+	assert window.label == "2026-05-20"
+
+
+def test_resolve_custom_window_rejects_invalid_dates():
+	assert resolve_custom_window("", now=NOW_UTC) is None
+	assert resolve_custom_window("not-a-date", now=NOW_UTC) is None
+	assert resolve_custom_window("2026-05-15", "garbage", now=NOW_UTC) is None
+
+
+def test_resolve_custom_window_rejects_reverse_range():
+	# End before start -> caller can render a usage message instead of an
+	# empty report.
+	assert resolve_custom_window("2026-05-20", "2026-05-15", now=NOW_UTC) is None
+
+
+def test_resolve_custom_window_accepts_iso_datetimes():
+	window = resolve_custom_window(
+		"2026-05-18T09:30:00",
+		"2026-05-18T16:00:00",
+		now=NOW_UTC,
+	)
+
+	assert window is not None
+	# 09:30 ET == 13:30 UTC during EDT.
+	assert window.start_iso_utc == "2026-05-18T13:30:00+00:00"
+
+
+def test_resolve_custom_window_drives_filter_to_window():
+	window = resolve_custom_window("2026-05-18", "2026-05-19", now=NOW_UTC)
+	assert window is not None
+	trades = [
+		{"id": 1, "exit_time": _et_iso(2026, 5, 18, 10)},   # in
+		{"id": 2, "exit_time": _et_iso(2026, 5, 19, 23)},   # in (late same-day)
+		{"id": 3, "exit_time": _et_iso(2026, 5, 20, 10)},   # out
+		{"id": 4, "exit_time": _et_iso(2026, 5, 17, 12)},   # out
 	]
 
 	kept = filter_trades_to_window(trades, window)
@@ -338,6 +471,31 @@ def test_build_report_embed_per_ticker_capped():
 
 	lines = by_name["By Ticker"].splitlines()
 	assert len(lines) == MAX_TICKER_ROWS
+
+
+def test_build_report_embed_filters_label_appears_in_description():
+	window = resolve_window("today", now=NOW_UTC)
+	trades = [_winning_trade(pnl=10.0)]
+
+	embed_with = build_report_embed(
+		window=window, trades=trades, filters_label="filtered by symbol=AMD"
+	)
+	embed_without = build_report_embed(window=window, trades=trades)
+
+	assert "filtered by symbol=AMD" in embed_with["description"]
+	assert "filtered by" not in embed_without["description"]
+
+
+def test_build_report_embed_filters_label_shown_on_empty_result():
+	window = resolve_window("today", now=NOW_UTC)
+
+	embed = build_report_embed(
+		window=window, trades=[], filters_label="filtered by strategy=momentum"
+	)
+
+	# An empty result is more informative when it names the filter the
+	# user just applied -- otherwise it looks like the day had no trades.
+	assert "filtered by strategy=momentum" in embed["description"]
 
 
 def test_build_report_embed_source_url_attached():

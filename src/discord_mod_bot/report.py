@@ -95,20 +95,141 @@ def filter_trades_to_window(
 	return out
 
 
+def filter_trades_by_field(
+	trades: list[dict[str, Any]],
+	field_name: str,
+	expected: str,
+) -> list[dict[str, Any]]:
+	"""Keep trades whose `field_name` matches `expected` (case-insensitive).
+
+	Empty/None `expected` returns the input unchanged so callers can chain
+	filters unconditionally. Trades missing the field are dropped when the
+	filter is active -- a requested filter that can't be evaluated is a
+	stronger signal than silently keeping everything.
+	"""
+	target = (expected or "").strip().lower()
+	if not target:
+		return trades
+	out: list[dict[str, Any]] = []
+	for trade in trades:
+		value = trade.get(field_name)
+		if value is None:
+			continue
+		if str(value).strip().lower() == target:
+			out.append(trade)
+	return out
+
+
+def filter_trades_by_symbol(
+	trades: list[dict[str, Any]],
+	symbol: str,
+) -> list[dict[str, Any]]:
+	"""Keep trades whose `ticker` matches `symbol` (case-insensitive)."""
+	return filter_trades_by_field(trades, "ticker", symbol)
+
+
+def filter_trades_by_strategy(
+	trades: list[dict[str, Any]],
+	strategy: str,
+) -> list[dict[str, Any]]:
+	"""Keep trades whose `strategy` matches `strategy` (case-insensitive)."""
+	return filter_trades_by_field(trades, "strategy", strategy)
+
+
+def filter_trades_by_channel(
+	trades: list[dict[str, Any]],
+	channel: str,
+) -> list[dict[str, Any]]:
+	"""Keep trades whose `channel` (signal source) matches (case-insensitive)."""
+	return filter_trades_by_field(trades, "channel", channel)
+
+
+def resolve_custom_window(
+	since: str,
+	until: str | None = None,
+	*,
+	now: datetime | None = None,
+) -> ReportWindow | None:
+	"""Build a window from explicit `--from` / `--to` dates.
+
+	Both accept `YYYY-MM-DD` (interpreted as ET wall-clock; `since` is
+	midnight ET, `until` is end-of-day ET) or a full ISO datetime
+	(naive datetimes are treated as ET). When `until` is omitted, the
+	window extends to `now`.
+
+	Returns None on any parse failure or when end precedes start.
+	"""
+	start_et = _parse_window_bound(since, end_of_day=False)
+	if start_et is None:
+		return None
+
+	if until and until.strip():
+		end_et = _parse_window_bound(until, end_of_day=True)
+		if end_et is None:
+			return None
+	else:
+		end_et = (now or datetime.now(timezone.utc)).astimezone(_ET)
+
+	if end_et < start_et:
+		return None
+
+	if start_et.date() == end_et.date():
+		label = start_et.strftime("%Y-%m-%d")
+	else:
+		label = f"{start_et.strftime('%Y-%m-%d')} -> {end_et.strftime('%Y-%m-%d')}"
+	return ReportWindow("custom", label, start_et, end_et)
+
+
+def _parse_window_bound(value: str, *, end_of_day: bool) -> datetime | None:
+	"""Parse `YYYY-MM-DD` or ISO datetime as an ET-localised datetime.
+
+	Bare dates are anchored at midnight ET (or 23:59:59.999999 ET when
+	`end_of_day` is True). Naive datetimes are localised to ET; aware
+	datetimes are converted to ET.
+	"""
+	text = (value or "").strip()
+	if not text:
+		return None
+	if len(text) == 10 and text[4] == "-" and text[7] == "-":
+		try:
+			day = datetime.fromisoformat(text)
+		except ValueError:
+			return None
+		day = day.replace(tzinfo=_ET)
+		if end_of_day:
+			day = day.replace(hour=23, minute=59, second=59, microsecond=999999)
+		return day
+	normalised = text.replace(" ", "T", 1) if text[10:11] == " " else text
+	try:
+		dt = datetime.fromisoformat(normalised)
+	except ValueError:
+		return None
+	if dt.tzinfo is None:
+		dt = dt.replace(tzinfo=_ET)
+	return dt.astimezone(_ET)
+
+
 def build_report_embed(
 	*,
 	window: ReportWindow,
 	trades: list[dict[str, Any]],
 	positions: dict[str, Any] | None = None,
 	source_url: str = "",
+	filters_label: str = "",
 ) -> dict[str, Any]:
-	"""Render the report as a Discord embed (dict form)."""
+	"""Render the report as a Discord embed (dict form).
+
+	`filters_label`, when non-empty, is appended to the description (and
+	to the empty-trades message) so the reader sees which filters were
+	applied -- e.g. `filtered by symbol=AMD, strategy=momentum`.
+	"""
 	totals = _aggregate(trades)
+	filters_suffix = f" -- {filters_label}" if filters_label else ""
 
 	if totals["count"] == 0:
 		color = COLOR_NEUTRAL
 		description = (
-			f"No closed trades for **{window.label}** "
+			f"No closed trades for **{window.label}**{filters_suffix} "
 			f"(window: {window.start_et.strftime('%Y-%m-%d %H:%M ET')} -> "
 			f"{window.end_et.strftime('%Y-%m-%d %H:%M ET')})."
 		)
@@ -120,7 +241,7 @@ def build_report_embed(
 		else:
 			color = COLOR_NEUTRAL
 		description = (
-			f"**{window.label}** | "
+			f"**{window.label}**{filters_suffix} | "
 			f"{totals['count']} trade(s) | "
 			f"{_format_pnl(totals['net_pnl'])} net | "
 			f"WR {totals['win_rate_pct']:.1f}%"

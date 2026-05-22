@@ -75,10 +75,20 @@ should also register a `CommandSpec` in `src/discord_mod_bot/bot.py:_SPECS`.
 
 - `!health` -- `GET /health` from the trading webhook server.
 - `!positions` -- `GET /positions`, rendered as a Discord embed.
-- `!report [period] [--here]` -- generate a performance report (period
-  defaults to `today`; also accepts `week` and `month`) and post it to the
-  `webhooks.report` Discord webhook. Pass `--here` to also preview it in
-  the originating channel.
+- `!report [period] [filters...]` -- generate a performance report and reply
+  with it as an embed in the channel where the command was invoked. Examples:
+
+  - `!report` -- today (default)
+  - `!report week` / `!report month` -- WTD / MTD
+  - `!report --from=2026-05-15` -- custom window from that date to now
+  - `!report --from=2026-05-15 --to=2026-05-18` -- explicit range (full days, ET)
+  - `!report week --symbol=AMD` -- filter to a single ticker (`--ticker` also works)
+  - `!report month --strategy=momentum` -- filter to a strategy name
+  - `!report today --channel=alerts-spx` -- filter to a signal source channel
+
+  Filters compose (window first, then symbol / strategy / channel). Trades
+  missing the filtered field are dropped, so empty results signal that the
+  filter didn't apply rather than that nothing matched.
 
 Arguments are parsed by `discord_mod_bot.commands.parse_args`, which
 understands a positional subcommand, bare `--flag`s and `--key=value`

@@ -344,34 +344,39 @@ class DiscordModBot:
             await ctx.send(f"{payload}")
 
     async def _cmd_report(self, ctx, args: CommandArgs) -> None:
-        """Generate a performance report and post it to the report webhook.
+        """Generate a performance report and reply with it in the channel.
 
         Usage:
-          !report             -> today (default)
-          !report today
-          !report week        -> current calendar week starting Monday ET
-          !report month       -> month-to-date
-          !report ... --here  -> also post the embed back in the originating
-                                 channel as a preview (useful for testing).
+          !report                        -> today (default)
+          !report today | week | month
+          !report --from=YYYY-MM-DD [--to=YYYY-MM-DD]
+                                         -> custom window; --to defaults to now
+          !report ... --symbol=AMD       -> filter trades by ticker (alias --ticker)
+          !report ... --strategy=NAME    -> filter trades by strategy field
+          !report ... --channel=NAME     -> filter trades by source-channel field
         """
-        window = report_builder.resolve_window(args.subcommand)
-        if window is None:
-            await ctx.send(
-                f"Unknown period `{args.subcommand}`. Try "
-                f"`{self.config.command_prefix}report today`, "
-                f"`{self.config.command_prefix}report week`, or "
-                f"`{self.config.command_prefix}report month`."
-            )
-            return
-
-        webhook_cfg = self.config.yaml.webhook("report")
-        if not webhook_cfg.enabled or not webhook_cfg.full_url:
-            await ctx.send(
-                "Report webhook is not configured. Set "
-                "`webhooks.report.enabled: true` and `webhooks.report.url` "
-                "in config.yaml."
-            )
-            return
+        prefix = self.config.command_prefix
+        since_arg = args.option("from") or args.option("since")
+        if since_arg:
+            until_arg = args.option("to") or args.option("until")
+            window = report_builder.resolve_custom_window(since_arg, until_arg)
+            if window is None:
+                await ctx.send(
+                    f"Could not parse `--from`/`--to`. Try "
+                    f"`{prefix}report --from=YYYY-MM-DD [--to=YYYY-MM-DD]`."
+                )
+                return
+        else:
+            window = report_builder.resolve_window(args.subcommand)
+            if window is None:
+                await ctx.send(
+                    f"Unknown period `{args.subcommand}`. Try "
+                    f"`{prefix}report today`, "
+                    f"`{prefix}report week`, "
+                    f"`{prefix}report month`, or "
+                    f"`{prefix}report --from=YYYY-MM-DD`."
+                )
+                return
 
         async with ctx.typing():
             try:
@@ -405,36 +410,33 @@ class DiscordModBot:
             # be safe.
             scoped = report_builder.filter_trades_to_window(raw_trades, window)
 
+            symbol_filter = args.option("symbol") or args.option("ticker")
+            strategy_filter = args.option("strategy")
+            channel_filter = args.option("channel")
+            if symbol_filter:
+                scoped = report_builder.filter_trades_by_symbol(scoped, symbol_filter)
+            if strategy_filter:
+                scoped = report_builder.filter_trades_by_strategy(scoped, strategy_filter)
+            if channel_filter:
+                scoped = report_builder.filter_trades_by_channel(scoped, channel_filter)
+            filter_parts = []
+            if symbol_filter:
+                filter_parts.append(f"symbol={symbol_filter.upper()}")
+            if strategy_filter:
+                filter_parts.append(f"strategy={strategy_filter}")
+            if channel_filter:
+                filter_parts.append(f"channel={channel_filter}")
+            filters_label = ("filtered by " + ", ".join(filter_parts)) if filter_parts else ""
+
             embed = report_builder.build_report_embed(
                 window=window,
                 trades=scoped,
                 positions=positions_payload if isinstance(positions_payload, dict) else None,
                 source_url=self.config.webhook_base_url,
+                filters_label=filters_label,
             )
 
-            try:
-                await asyncio.to_thread(
-                    self.discord_webhooks.post_embed,
-                    webhook_cfg.full_url,
-                    embed,
-                    username=webhook_cfg.name,
-                )
-            except requests.HTTPError as exc:
-                status = exc.response.status_code if exc.response is not None else "unknown"
-                await ctx.send(
-                    f"Report webhook POST failed (HTTP {status}): {_safe_error(exc)}"
-                )
-                return
-            except Exception as exc:
-                await ctx.send(f"Could not post report: {_safe_error(exc)}")
-                return
-
-        await ctx.send(
-            f"Report posted to `{webhook_cfg.name or 'report webhook'}` "
-            f"({len(scoped)} trade(s), {window.label})."
-        )
-        if args.flag("here"):
-            await ctx.send(embed=self._discord_embed(embed))
+        await ctx.send(embed=self._discord_embed(embed))
 
     def _discord_embed(self, payload: dict[str, Any]):
         embed = self.discord.Embed(
