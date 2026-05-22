@@ -14,10 +14,13 @@ MOD_BOT_WEBHOOK_BASE_URL="http://127.0.0.1:5555"
 MOD_BOT_COMMAND_PREFIX="!"
 # MOD_BOT_CHANNEL_IDS="123456789012345678,234567890123456789"
 # MOD_BOT_AUTH_TOKEN="same-token-as-webhook.auth_token-if-enabled"
+# MOD_BOT_SYNC_GUILD_ID="123456789012345678"   # dev guild for instant slash registration
 ```
 
 The Discord application must have the Message Content intent enabled because
-this bot uses prefix commands like `!positions`.
+this bot uses prefix commands like `!positions`. Set `MOD_BOT_SYNC_GUILD_ID`
+to your dev guild ID to have slash commands appear instantly there; without
+it, the bot leaves the command tree alone (global sync is opt-in).
 
 ## Install
 
@@ -69,29 +72,31 @@ webhooks:
 
 `allowed-by: admin` requires the Discord Administrator guild permission;
 `members` lets anyone in an allowed channel run the command. New commands
-should also register a `CommandSpec` in `src/discord_mod_bot/bot.py:_SPECS`.
+register inside `_register_commands` in `src/discord_mod_bot/bot.py`.
 
 ## Commands
 
-- `!health` -- `GET /health` from the trading webhook server.
-- `!positions` -- `GET /positions`, rendered as a Discord embed.
-- `!report [period] [filters...]` -- generate a performance report and reply
-  with it as an embed in the channel where the command was invoked. Examples:
+All commands are registered as **hybrid commands** — the same handler
+serves both prefix (`!report`) and slash (`/report`) invocations. Slash
+arguments take their values via the native Discord UI (dropdowns, typed
+fields, autocomplete). For prefix invocations, kwargs use `key:value`
+syntax (no double-dash).
 
-  - `!report` -- today (default)
-  - `!report week` / `!report month` -- WTD / MTD
-  - `!report --from=2026-05-15` -- custom window from that date to now
-  - `!report --from=2026-05-15 --to=2026-05-18` -- explicit range (full days, ET)
-  - `!report week --symbol=AMD` -- filter to a single ticker (`--ticker` also works)
-  - `!report month --strategy=momentum` -- filter to a strategy name
-  - `!report today --channel=alerts-spx` -- filter to a signal source channel
+- `/health` (or `!health`) — `GET /health`. Slash response is ephemeral
+  (visible only to the invoker).
+- `/positions` (or `!positions`) — `GET /positions`, rendered as an embed.
+- `/report` (or `!report`) — performance report posted in the same channel.
+  Slash UI: a `period` dropdown, optional `from_date` / `to_date`
+  (YYYY-MM-DD), and `symbol` / `strategy` / `channel` filters with live
+  autocomplete from the trading server. Examples:
+
+  - `/report` — today (default)
+  - `/report period:week`
+  - `/report period:custom from_date:2026-05-15 to_date:2026-05-18`
+  - `/report period:week symbol:AMD`
+  - `/report period:month strategy:momentum`
 
   Filters compose (window first, then symbol / strategy / channel). Trades
   missing the filtered field are dropped, so empty results signal that the
   filter didn't apply rather than that nothing matched.
-
-Arguments are parsed by `discord_mod_bot.commands.parse_args`, which
-understands a positional subcommand, bare `--flag`s and `--key=value`
-options -- enough scaffolding for future commands without changing the
-plumbing.
 

@@ -8,8 +8,7 @@ wall clock.
 
 from datetime import datetime, timedelta, timezone
 
-from discord_mod_bot.bot import _embed_to_webhook_dict, _SPECS
-from discord_mod_bot.commands import parse_args
+from discord_mod_bot.bot import _embed_to_webhook_dict
 from discord_mod_bot.report import (
 	COLOR_GAIN,
 	COLOR_LOSS,
@@ -102,8 +101,6 @@ def test_resolve_window_unknown_period_returns_none():
 
 
 def test_resolve_window_empty_period_defaults_to_today():
-	# parse_args canonicalises empty input to the spec default, but the
-	# builder itself should also tolerate it.
 	window = resolve_window("", now=NOW_UTC)
 	assert window is not None
 	assert window.period == "today"
@@ -546,24 +543,3 @@ def test_embed_to_webhook_dict_strips_missing_optional_keys():
 	assert "fields" not in hook
 
 
-# ---------------------------------------------------------------------------
-# Command-arg parser interaction (relevant to !report flag plumbing)
-# ---------------------------------------------------------------------------
-
-def test_parse_args_report_defaults_to_today():
-	args = parse_args((), _SPECS["report"])
-	assert args.subcommand == "today"
-	assert args.positional == ()
-
-
-def test_parse_args_report_picks_up_here_flag():
-	args = parse_args(("week", "--here"), _SPECS["report"])
-	assert args.subcommand == "week"
-	assert args.flag("here") is True
-
-
-def test_parse_args_supports_key_value_options():
-	args = parse_args(("today", "--ticker=AMD", "--limit:50"), _SPECS["report"])
-	assert args.option("ticker") == "AMD"
-	assert args.option("limit") == "50"
-	assert args.option("missing", default="x") == "x"
