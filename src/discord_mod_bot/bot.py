@@ -1,11 +1,11 @@
 """Standalone Discord mod bot that proxies operator commands to webhooks.
 
 Run with:
-    python -m discord_mod_bot
+    uv run discord-mod-bot
 
-The bot is intentionally separate from app.options.discord_bot. It does not
-parse scanner alerts or hold a trading executor; it only forwards Discord
-commands to the configured local webhook server.
+Commands are registered as discord.py hybrid commands -- the same handler
+serves both prefix (`!report`) and slash (`/report`) invocations during
+the migration window.
 """
 
 from __future__ import annotations
@@ -15,15 +15,15 @@ import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Iterable
+from typing import Any, Literal, Optional
 from urllib.parse import urljoin
 
 import requests
 from dotenv import load_dotenv
 
-from discord_mod_bot.commands import CommandArgs, CommandSpec, parse_args
-from discord_mod_bot.config_loader import YamlConfig, load_yaml_config
+from discord_mod_bot import autocomplete as ac
 from discord_mod_bot import report as report_builder
+from discord_mod_bot.config_loader import YamlConfig, load_yaml_config
 
 
 LOG = logging.getLogger("discord_mod_bot")
@@ -106,28 +106,6 @@ def _parse_channel_ids(raw: str) -> tuple[int, ...]:
         except ValueError:
             LOG.warning("Ignoring invalid Discord channel id %r", part)
     return tuple(ids)
-
-
-# Per-command argument specs. Keeping them at module scope means tests can
-# import + parse the same way the bot does. Add a new entry here when you
-# add a new command -- the spec is also what tells parse_args() how to
-# canonicalise the subcommand.
-_SPECS: dict[str, CommandSpec] = {
-    "positions": CommandSpec(
-        name="positions",
-        description="Show open positions from the trading server.",
-    ),
-    "health": CommandSpec(
-        name="health",
-        description="Trading webhook server health check.",
-    ),
-    "report": CommandSpec(
-        name="report",
-        description="Generate a performance report and post to the report webhook.",
-        default_subcommand="today",
-        allowed_subcommands=("today", "week", "month"),
-    ),
-}
 
 
 def _is_admin(ctx) -> bool:
@@ -222,10 +200,11 @@ def _embed_to_webhook_dict(embed: dict[str, Any]) -> dict[str, Any]:
 
 class DiscordModBot:
     def __init__(self, config: ModBotConfig):
-        discord, commands = _load_discord()
+        discord, commands, app_commands = _load_discord()
         self.config = config
         self.discord = discord
         self.commands = commands
+        self.app_commands = app_commands
         self.webhooks = WebhookClient(
             config.webhook_base_url,
             timeout=config.request_timeout_seconds,
@@ -234,12 +213,31 @@ class DiscordModBot:
         self.discord_webhooks = DiscordWebhookPoster(
             timeout=config.request_timeout_seconds,
         )
+        self.autocomplete = ac.AutocompleteCache(self.webhooks.get_json)
 
         intents = discord.Intents.default()
         intents.message_content = True
         self.bot = commands.Bot(command_prefix=config.command_prefix, intents=intents)
+        self.bot.setup_hook = self._setup_hook
         self._register_events()
         self._register_commands()
+
+    async def _setup_hook(self) -> None:
+        """Sync app commands. Per-guild if MOD_BOT_SYNC_GUILD_ID is set
+        (instant), otherwise skip (global sync is opt-in to avoid surprise
+        registrations during dev).
+        """
+        guild_id = os.environ.get("MOD_BOT_SYNC_GUILD_ID", "").strip()
+        if guild_id.isdigit():
+            guild = self.discord.Object(id=int(guild_id))
+            self.bot.tree.copy_global_to(guild=guild)
+            synced = await self.bot.tree.sync(guild=guild)
+            LOG.info("Synced %d app commands to guild %s", len(synced), guild_id)
+        else:
+            LOG.info(
+                "MOD_BOT_SYNC_GUILD_ID unset; skipping app-command sync. "
+                "Set it to register slash commands instantly on a dev guild."
+            )
 
     def run(self) -> None:
         self.bot.run(self.config.token, log_handler=None)
@@ -250,18 +248,18 @@ class DiscordModBot:
     async def _gate(self, ctx, name: str) -> bool:
         """Apply YAML enabled + allowed-by + channel allowlist gates.
 
-        Returns True if the command should proceed. On rejection a short
-        message is sent back (or the call is silently dropped for the
-        channel allowlist, matching prior behavior).
+        Returns True if the command should proceed. Rejection messages are
+        sent ephemerally on the slash surface (silently ignored on prefix);
+        channel-allowlist rejection drops silently as before.
         """
         if not self._channel_allowed(ctx.channel.id):
             return False
         cmd_cfg = self.config.yaml.command(name)
         if not cmd_cfg.enabled:
-            await ctx.send(f"`{self.config.command_prefix}{name}` is disabled in config.yaml.")
+            await ctx.send(f"`{name}` is disabled in config.yaml.", ephemeral=True)
             return False
         if cmd_cfg.allowed_by.lower() == "admin" and not _is_admin(ctx):
-            await ctx.send(f"`{self.config.command_prefix}{name}` is admin-only.")
+            await ctx.send(f"`{name}` is admin-only.", ephemeral=True)
             return False
         return True
 
@@ -283,33 +281,85 @@ class DiscordModBot:
             await ctx.send(f"Command failed: {_safe_error(error)}")
 
     def _register_commands(self) -> None:
-        # The discord.py registration is the only thing that has to happen
-        # at the framework level; the handlers below delegate to the
-        # underscored implementations so the same logic is reachable from
-        # tests without spinning up a real bot client.
-        @self.bot.command(name="positions")
-        async def positions(ctx, *raw_args):
-            if not await self._gate(ctx, "positions"):
-                return
-            await self._cmd_positions(ctx, parse_args(raw_args, _SPECS["positions"]))
+        # Hybrid commands register both prefix (!foo) and slash (/foo)
+        # surfaces from a single decorator. Handlers stay thin -- they gate
+        # and delegate -- so tests can call _cmd_* directly without a bot
+        # client.
+        app_commands = self.app_commands
+        Choice = app_commands.Choice
 
-        @self.bot.command(name="health")
-        async def health(ctx, *raw_args):
+        @self.bot.hybrid_command(
+            name="health",
+            description="Trading webhook server health check.",
+        )
+        async def health(ctx):
             if not await self._gate(ctx, "health"):
                 return
-            await self._cmd_health(ctx, parse_args(raw_args, _SPECS["health"]))
+            await self._cmd_health(ctx)
 
-        @self.bot.command(name="report")
-        async def report(ctx, *raw_args):
+        @self.bot.hybrid_command(
+            name="positions",
+            description="Show open positions from the trading server.",
+        )
+        async def positions(ctx):
+            if not await self._gate(ctx, "positions"):
+                return
+            await self._cmd_positions(ctx)
+
+        @self.bot.hybrid_command(
+            name="report",
+            description="Performance report posted in this channel.",
+        )
+        @app_commands.default_permissions(administrator=True)
+        @app_commands.describe(
+            period="Time window preset (use 'custom' with from_date/to_date).",
+            from_date="Custom range start (YYYY-MM-DD); overrides period.",
+            to_date="Custom range end (YYYY-MM-DD); defaults to now.",
+            symbol="Filter to a single ticker.",
+            strategy="Filter to a strategy name.",
+            channel="Filter to a signal-source channel.",
+        )
+        async def report(
+            ctx,
+            period: Literal["today", "week", "month", "custom"] = "today",
+            from_date: Optional[str] = None,
+            to_date: Optional[str] = None,
+            symbol: Optional[str] = None,
+            strategy: Optional[str] = None,
+            channel: Optional[str] = None,
+        ):
             if not await self._gate(ctx, "report"):
                 return
-            await self._cmd_report(ctx, parse_args(raw_args, _SPECS["report"]))
+            await self._cmd_report(
+                ctx,
+                period=period,
+                from_date=from_date,
+                to_date=to_date,
+                symbol=symbol,
+                strategy=strategy,
+                channel=channel,
+            )
+
+        async def _ac(values_coro, current):
+            return [Choice(name=v, value=v) for v in ac.match(await values_coro, current)]
+
+        @report.autocomplete("symbol")
+        async def _symbol_ac(interaction, current: str):
+            return await _ac(self.autocomplete.symbols(), current)
+
+        @report.autocomplete("strategy")
+        async def _strategy_ac(interaction, current: str):
+            return await _ac(self.autocomplete.strategies(), current)
+
+        @report.autocomplete("channel")
+        async def _channel_ac(interaction, current: str):
+            return await _ac(self.autocomplete.channels(), current)
 
     # ------------------------------------------------------------------
     # Handlers (one per command, kept thin so tests can call them directly)
     # ------------------------------------------------------------------
 
-    async def _cmd_positions(self, ctx, args: CommandArgs) -> None:
+    async def _cmd_positions(self, ctx) -> None:
         """Fetch open position status from the local webhook server."""
         async with ctx.typing():
             try:
@@ -328,54 +378,51 @@ class DiscordModBot:
         ):
             await ctx.send(embed=self._discord_embed(embed_payload))
 
-    async def _cmd_health(self, ctx, args: CommandArgs) -> None:
-        """Webhook server health check."""
+    async def _cmd_health(self, ctx) -> None:
+        """Webhook server health check. Slash response is ephemeral."""
         async with ctx.typing():
             try:
                 payload = await asyncio.to_thread(self.webhooks.get_json, "/health")
             except requests.HTTPError as exc:
                 status = exc.response.status_code if exc.response is not None else "unknown"
-                await ctx.send(f"`/health` returned HTTP {status}: {_safe_error(exc)}")
+                await ctx.send(f"`/health` returned HTTP {status}: {_safe_error(exc)}", ephemeral=True)
                 return
             except Exception as exc:
-                await ctx.send(f"Could not reach `/health`: {_safe_error(exc)}")
+                await ctx.send(f"Could not reach `/health`: {_safe_error(exc)}", ephemeral=True)
                 return
             LOG.info(payload)
-            await ctx.send(f"{payload}")
+            await ctx.send(f"{payload}", ephemeral=True)
 
-    async def _cmd_report(self, ctx, args: CommandArgs) -> None:
-        """Generate a performance report and reply with it in the channel.
-
-        Usage:
-          !report                        -> today (default)
-          !report today | week | month
-          !report --from=YYYY-MM-DD [--to=YYYY-MM-DD]
-                                         -> custom window; --to defaults to now
-          !report ... --symbol=AMD       -> filter trades by ticker (alias --ticker)
-          !report ... --strategy=NAME    -> filter trades by strategy field
-          !report ... --channel=NAME     -> filter trades by source-channel field
-        """
-        prefix = self.config.command_prefix
-        since_arg = args.option("from") or args.option("since")
-        if since_arg:
-            until_arg = args.option("to") or args.option("until")
-            window = report_builder.resolve_custom_window(since_arg, until_arg)
+    async def _cmd_report(
+        self,
+        ctx,
+        *,
+        period: str = "today",
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        symbol: Optional[str] = None,
+        strategy: Optional[str] = None,
+        channel: Optional[str] = None,
+    ) -> None:
+        """Generate a performance report and reply with it in the channel."""
+        if period == "custom" or from_date:
+            if not from_date:
+                await ctx.send(
+                    "`period=custom` needs `from_date` (YYYY-MM-DD).",
+                    ephemeral=True,
+                )
+                return
+            window = report_builder.resolve_custom_window(from_date, to_date)
             if window is None:
                 await ctx.send(
-                    f"Could not parse `--from`/`--to`. Try "
-                    f"`{prefix}report --from=YYYY-MM-DD [--to=YYYY-MM-DD]`."
+                    "Could not parse `from_date` / `to_date`. Use YYYY-MM-DD.",
+                    ephemeral=True,
                 )
                 return
         else:
-            window = report_builder.resolve_window(args.subcommand)
+            window = report_builder.resolve_window(period)
             if window is None:
-                await ctx.send(
-                    f"Unknown period `{args.subcommand}`. Try "
-                    f"`{prefix}report today`, "
-                    f"`{prefix}report week`, "
-                    f"`{prefix}report month`, or "
-                    f"`{prefix}report --from=YYYY-MM-DD`."
-                )
+                await ctx.send(f"Unknown period `{period}`.", ephemeral=True)
                 return
 
         async with ctx.typing():
@@ -409,24 +456,21 @@ class DiscordModBot:
             # the column may be empty for orphan rows); re-filter locally to
             # be safe.
             scoped = report_builder.filter_trades_to_window(raw_trades, window)
+            if symbol:
+                scoped = report_builder.filter_trades_by_symbol(scoped, symbol)
+            if strategy:
+                scoped = report_builder.filter_trades_by_strategy(scoped, strategy)
+            if channel:
+                scoped = report_builder.filter_trades_by_channel(scoped, channel)
 
-            symbol_filter = args.option("symbol") or args.option("ticker")
-            strategy_filter = args.option("strategy")
-            channel_filter = args.option("channel")
-            if symbol_filter:
-                scoped = report_builder.filter_trades_by_symbol(scoped, symbol_filter)
-            if strategy_filter:
-                scoped = report_builder.filter_trades_by_strategy(scoped, strategy_filter)
-            if channel_filter:
-                scoped = report_builder.filter_trades_by_channel(scoped, channel_filter)
-            filter_parts = []
-            if symbol_filter:
-                filter_parts.append(f"symbol={symbol_filter.upper()}")
-            if strategy_filter:
-                filter_parts.append(f"strategy={strategy_filter}")
-            if channel_filter:
-                filter_parts.append(f"channel={channel_filter}")
-            filters_label = ("filtered by " + ", ".join(filter_parts)) if filter_parts else ""
+            parts: list[str] = []
+            if symbol:
+                parts.append(f"symbol={symbol.upper()}")
+            if strategy:
+                parts.append(f"strategy={strategy}")
+            if channel:
+                parts.append(f"channel={channel}")
+            filters_label = ("filtered by " + ", ".join(parts)) if parts else ""
 
             embed = report_builder.build_report_embed(
                 window=window,
@@ -722,13 +766,13 @@ def _safe_error(error: BaseException) -> str:
 def _load_discord():
     try:
         import discord
+        from discord import app_commands
         from discord.ext import commands
     except ImportError as exc:  # pragma: no cover - exercised at runtime
         raise SystemExit(
-            "discord.py is required to run the mod bot. Install project "
-            "requirements with: pip install -r requirements.txt"
+            "discord.py is required to run the mod bot. Install with: uv sync"
         ) from exc
-    return discord, commands
+    return discord, commands, app_commands
 
 
 def main() -> None:
