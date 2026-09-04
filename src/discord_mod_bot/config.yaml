@@ -13,6 +13,9 @@ commands:
   close:
     enabled: true
     allowed-by: admin
+  grade:
+    enabled: true
+    allowed-by: admin
 
 webhooks:
   report:
