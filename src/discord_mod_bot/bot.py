@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 import requests
 from dotenv import load_dotenv
 
+from discord_mod_bot import alert_grades
 from discord_mod_bot import autocomplete as ac
 from discord_mod_bot import report as report_builder
 from discord_mod_bot.config_loader import YamlConfig, load_yaml_config
@@ -48,7 +49,22 @@ class ModBotConfig:
     request_timeout_seconds: float = 10.0
     auth_token: str = ""
     channel_ids: tuple[int, ...] = ()
+    grades_dir: str = "~/pytrade-signal-grades"
+    grades_env: str = "development"
+    grades_channel_dev: int = 0
+    grades_channel_prod: int = 0
     yaml: YamlConfig = field(default_factory=YamlConfig)
+
+    @property
+    def grades_channel_id(self) -> int:
+        """Destination for the alert-grades report.
+
+        Production is opt-in: anything other than an explicit
+        MOD_BOT_ALERT_GRADES_ENV=production posts to the dev channel.
+        """
+        if self.grades_env == "production":
+            return self.grades_channel_prod
+        return self.grades_channel_dev
 
     @classmethod
     def from_env(cls) -> "ModBotConfig":
@@ -80,6 +96,14 @@ class ModBotConfig:
             request_timeout_seconds=_float_env("MOD_BOT_REQUEST_TIMEOUT", 10.0),
             auth_token=os.environ.get("MOD_BOT_AUTH_TOKEN", "").strip(),
             channel_ids=_parse_channel_ids(os.environ.get("MOD_BOT_CHANNEL_IDS", "")),
+            grades_dir=os.environ.get(
+                "MOD_BOT_ALERT_GRADES_DIR", "~/pytrade-signal-grades"
+            ).strip(),
+            grades_env=os.environ.get(
+                "MOD_BOT_ALERT_GRADES_ENV", "development"
+            ).strip().lower(),
+            grades_channel_dev=_int_env("MOD_BOT_ALERT_GRADES_CHANNEL_DEV", 0),
+            grades_channel_prod=_int_env("MOD_BOT_ALERT_GRADES_CHANNEL_PROD", 0),
             yaml=yaml_cfg,
         )
 
@@ -92,6 +116,17 @@ def _float_env(name: str, default: float) -> float:
         return float(raw)
     except ValueError:
         LOG.warning("Invalid %s=%r; using %.1f", name, raw, default)
+        return default
+
+
+def _int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        LOG.warning("Invalid %s=%r; using %d", name, raw, default)
         return default
 
 
@@ -340,6 +375,31 @@ class DiscordModBot:
                 channel=channel,
             )
 
+        # `aliases` is a prefix-command feature -- app commands have no alias
+        # concept -- so /scorecard only exists if it is registered as its own
+        # command. Both gate on "grade", so config.yaml keeps one switch.
+        for _name in ("grade", "scorecard"):
+
+            @self.bot.hybrid_command(
+                name=_name,
+                description="Post the alert-grading report for a trading day.",
+            )
+            @app_commands.default_permissions(administrator=True)
+            @app_commands.describe(
+                date="Ledger day (YYYY-MM-DD); defaults to the newest."
+            )
+            async def grade(ctx, date: Optional[str] = None):
+                if not await self._gate(ctx, "grade"):
+                    return
+                await self._cmd_grade(ctx, date=date)
+
+            @grade.autocomplete("date")
+            async def _date_ac(interaction, current: str):
+                days = await asyncio.to_thread(
+                    alert_grades.list_days, self.config.grades_dir
+                )
+                return [Choice(name=d, value=d) for d in ac.match(days, current)]
+
         async def _ac(values_coro, current):
             return [Choice(name=v, value=v) for v in ac.match(await values_coro, current)]
 
@@ -482,7 +542,61 @@ class DiscordModBot:
 
         await ctx.send(embed=self._discord_embed(embed))
 
-    def _discord_embed(self, payload: dict[str, Any]):
+    async def _cmd_grade(self, ctx, *, date: Optional[str] = None) -> None:
+        """Reply in-channel with a day's alert-grading report."""
+        target = date or await asyncio.to_thread(
+            alert_grades.newest_final_day, self.config.grades_dir
+        )
+        if not target:
+            await ctx.send(
+                f"No final ledger day under `{self.config.grades_dir}`.",
+                ephemeral=True,
+            )
+            return
+        try:
+            day = await asyncio.to_thread(
+                alert_grades.load_day, self.config.grades_dir, target
+            )
+        except alert_grades.DayNotFound as exc:
+            await ctx.send(
+                f"No grades for `{exc.date}`. Available: "
+                + ", ".join(f"`{d}`" for d in exc.available[:10]),
+                ephemeral=True,
+            )
+            return
+        if day.partial_intraday:
+            await ctx.send(
+                f"`{day.date}` was graded while its session was still open;"
+                " it is not final yet.",
+                ephemeral=True,
+            )
+            return
+
+        async with ctx.typing():
+            await self.send_day_report(ctx, day)
+
+    async def send_day_report(self, destination, day: alert_grades.DayReport) -> None:
+        """Send a day's embeds, splitting on the 6000-character budget and
+        attaching the tape to whichever message carries the image embed.
+
+        A day whose manifest names no `png` is posted without the image --
+        zero contract bars is a legitimate, if poor, day -- and the embeds'
+        `attachment://` image is dropped with it so Discord is never handed a
+        reference to a file that was not uploaded.
+        """
+        # day.username is webhook-only -- a bot cannot set a per-message
+        # username -- so the grader's "(trial)" marker is dropped here.
+        for group in alert_grades.split_for_post(day.embeds):
+            attach = day.tape_path is not None and any(e.get("image") for e in group)
+            files = (
+                [self.discord.File(day.tape_path, filename=day.png_name)]
+                if attach
+                else []
+            )
+            embeds = [self._discord_embed(e, with_image=attach) for e in group]
+            await destination.send(embeds=embeds, files=files)
+
+    def _discord_embed(self, payload: dict[str, Any], *, with_image: bool = False):
         embed = self.discord.Embed(
             title=payload.get("title"),
             description=payload.get("description"),
@@ -499,6 +613,9 @@ class DiscordModBot:
         footer = payload.get("footer") or {}
         if footer.get("text"):
             embed.set_footer(text=footer["text"])
+        image_url = (payload.get("image") or {}).get("url")
+        if with_image and image_url:
+            embed.set_image(url=image_url)
         return embed
 
 

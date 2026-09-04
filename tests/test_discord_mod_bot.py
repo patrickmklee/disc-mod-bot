@@ -4,6 +4,8 @@ from discord_mod_bot.bot import (
     EMBED_FIELD_LIMIT,
     MAX_POSITION_FIELDS,
     POSITION_FIELD_VALUE_LIMIT,
+    DiscordModBot,
+    ModBotConfig,
     build_positions_embeds,
 )
 
@@ -94,3 +96,14 @@ def test_build_positions_embed_caps_fields_and_truncates_values():
     assert len(embed["fields"][3]["value"]) <= POSITION_FIELD_VALUE_LIMIT
     assert embed["fields"][-1]["name"] == "More positions"
     assert "additional position(s)" in embed["fields"][-1]["value"]
+
+
+def test_grade_and_scorecard_are_both_registered_as_slash_commands():
+	"""`aliases` is a prefix-command feature: discord.py app commands have no
+	alias concept, so /scorecard exists only because it is registered in its
+	own right. Asserted on the tree because the bug is invisible in the
+	prefix commands, which the alias does cover.
+	"""
+	bot = DiscordModBot(ModBotConfig(token="test-token")).bot
+	assert {"grade", "scorecard"} <= {c.name for c in bot.tree.get_commands()}
+	assert {"grade", "scorecard"} <= {c.qualified_name for c in bot.commands}

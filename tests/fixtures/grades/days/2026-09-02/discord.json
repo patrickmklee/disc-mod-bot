@@ -1,0 +1,47 @@
+{
+ "username": "pytrade alert-grading (trial)",
+ "embeds": [
+  {
+   "title": "Alert grades \u2014 2026-09-02",
+   "description": "**10 alerts** \u00b7 \u2705 5 right \u00b7 \u274c 3 wrong \u00b7 \u2796 2 flat \u00b7 **50% right**\n6 of 9 contracts reached +10% \u00b7 4 idiosyncratic moves",
+   "color": 16763904,
+   "fields": [
+    {
+     "name": "\u2705 sidea/homer (n=5)",
+     "value": "\u2705 3  \u274c 1  \u2796 1  (60% right)\n+10%: 4/4, median 13m\ndrawdown first: -31%\npeak +104% / EOD -73%\nbest: lock50",
+     "inline": true
+    },
+    {
+     "name": "\u2705 sideb/maggie (n=1)",
+     "value": "\u2705 1  \u274c 0  \u2796 0  (100% right)\n+10%: 1/1, median 2m\ndrawdown first: -11%\npeak +764% / EOD +373%\nbest: trail15/25",
+     "inline": true
+    }
+   ],
+   "footer": {
+    "text": "pytrade alert-grading \u00b7 trial mode \u00b7 days/2026-09-02/grades.json"
+   },
+   "image": {
+    "url": "attachment://tape.png"
+   }
+  },
+  {
+   "title": "Per alert \u2014 2026-09-02",
+   "color": 16763904,
+   "fields": [
+    {
+     "name": "\u2705 AVGO put 08:35 \u00b7 homer",
+     "value": "right in 18m \u00b7 idiosyncratic\nund 30m +0.3% (SPY +0.1%), pre +0.1%\ncontract: no option bars",
+     "inline": true
+    },
+    {
+     "name": "\u274c META put 09:15 \u00b7 homer",
+     "value": "wrong \u00b7 endure\npayoff paid (not realizable) \u00b7 deep dd\nund 30m -2.3% (SPY -0.1%), pre -0.0%\npeak +21% @14m \u00b7 EOD -100%\n+10% in 14m after -36%\nlock10/25/50: -36% / -100% / -100%\nbest: trail30/30 (-30%)\nER - \u00b7 range 9.017%/m \u00b7 jumps 0 \u00b7 wick-only 0\nstops surviving to peak: -20%, -30%, -40%\nNBBO peak -20%, spread 104%",
+     "inline": true
+    }
+   ],
+   "footer": {
+    "text": "contract = scanner's ATM pick \u00b7 entry = first bar after the alert \u00b7 und/SPY = signed 30-min move"
+   }
+  }
+ ]
+}

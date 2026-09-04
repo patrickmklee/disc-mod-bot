@@ -1,0 +1,300 @@
+[
+ {
+  "date": "2026-09-02",
+  "lane": "sidea",
+  "source": "homer",
+  "ticker": "AVGO",
+  "direction": "put",
+  "alert_ts": "2026-09-02T12:35:16.068000+00:00",
+  "message_id": "",
+  "strike": 370.0,
+  "expire": "2026-09-02",
+  "occ": "AVGO260902P00370000",
+  "ref_price": 370.37,
+  "target": 364.52,
+  "stop": 373.3,
+  "mid_at_alert": null,
+  "extra": {
+   "stage": 2,
+   "stage_label": "DISTRIBUTION CONFIRMED",
+   "action": "ENTER NOW",
+   "otm_strike": 365.0,
+   "conviction_tier": "",
+   "final_score": 43,
+   "score_grade": "B",
+   "signal_id": 1022
+  },
+  "key": "2026-09-02|sidea|homer|AVGO|put|08:35:16",
+  "alert_et": "08:35:16",
+  "underlying": {
+   "und_px_at_alert": 370.4,
+   "und_ref_vs_scanner_pct": 0.008,
+   "pre_move_signed_pct": 0.108,
+   "und_5m_signed_pct": 0.054,
+   "spy_5m_signed_pct": 0.013,
+   "und_15m_signed_pct": 0.367,
+   "spy_15m_signed_pct": 0.05,
+   "und_30m_signed_pct": 0.31,
+   "spy_30m_signed_pct": 0.051,
+   "und_60m_signed_pct": 1.336,
+   "spy_60m_signed_pct": -0.005,
+   "und_eod_signed_pct": 0.742,
+   "und_mfe_pct": 1.552,
+   "und_mae_pct": -0.238,
+   "target_hit_min": null,
+   "target_already_past_at_alert": false,
+   "stop_hit_min": null,
+   "status": "ok"
+  },
+  "contract": {
+   "status": "no_option_bars"
+  },
+  "realizable": {
+   "status": "no_quotes"
+  },
+  "erraticness": {
+   "status": "no_path"
+  },
+  "direction_touch": {
+   "verdict": "right",
+   "first_touch_min": 17.7,
+   "adverse_touch_min": null,
+   "band_pct": 0.519,
+   "rs_per_min_pct": 0.067,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "unknown",
+   "risk": "unknown"
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 1.9,
+   "vwap_dist_signed_pct": -0.268,
+   "orb15_position": null,
+   "spread_pct_at_entry": null,
+   "nbbo_size_imbalance_at_entry": null,
+   "tod_bucket": "premarket"
+  },
+  "verdict": {
+   "accuracy": "right",
+   "accuracy_30m": "right",
+   "coincidence": "idiosyncratic",
+   "timing": "unknown",
+   "payoff": "unknown",
+   "payoff_realizable": null,
+   "risk": "unknown",
+   "erraticness": "unknown",
+   "best_exit_template": "unknown",
+   "version": 2
+  }
+ },
+ {
+  "date": "2026-09-02",
+  "lane": "sidea",
+  "source": "homer",
+  "ticker": "META",
+  "direction": "put",
+  "alert_ts": "2026-09-02T13:15:37.748000+00:00",
+  "message_id": "",
+  "strike": 577.5,
+  "expire": "2026-09-02",
+  "occ": "META260902P00577500",
+  "ref_price": 576.75,
+  "target": 565.67,
+  "stop": 582.29,
+  "mid_at_alert": null,
+  "extra": {
+   "stage": 2,
+   "stage_label": "DISTRIBUTION CONFIRMED",
+   "action": "ENTER NOW",
+   "otm_strike": 572.5,
+   "conviction_tier": "",
+   "final_score": 44,
+   "score_grade": "B",
+   "signal_id": 1027
+  },
+  "key": "2026-09-02|sidea|homer|META|put|09:15:37",
+  "alert_et": "09:15:37",
+  "underlying": {
+   "und_px_at_alert": 576.86,
+   "und_ref_vs_scanner_pct": 0.019,
+   "pre_move_signed_pct": -0.014,
+   "und_5m_signed_pct": 0.016,
+   "spy_5m_signed_pct": -0.02,
+   "und_15m_signed_pct": -1.236,
+   "spy_15m_signed_pct": -0.032,
+   "und_30m_signed_pct": -2.316,
+   "spy_30m_signed_pct": -0.075,
+   "und_60m_signed_pct": -3.717,
+   "spy_60m_signed_pct": -0.322,
+   "und_eod_signed_pct": -2.798,
+   "und_mfe_pct": 0.097,
+   "und_mae_pct": -4.077,
+   "target_hit_min": null,
+   "target_already_past_at_alert": false,
+   "stop_hit_min": 14.4,
+   "status": "ok"
+  },
+  "contract": {
+   "baseline": 3.1,
+   "baseline_src": "first_bar_open",
+   "entry_lag_min": 14.4,
+   "peak_pct": 21.0,
+   "peak_min": 14.4,
+   "trough_pct": -99.7,
+   "trough_min": 305.4,
+   "eod_pct": -99.7,
+   "t_plus10_min": 14.4,
+   "dd_before_plus10_pct": -35.5,
+   "t_plus25_min": null,
+   "dd_before_plus25_pct": null,
+   "t_plus50_min": null,
+   "dd_before_plus50_pct": null,
+   "what_if": {
+    "lock10": {
+     "exit_pct": -35.5,
+     "minutes": 14.4
+    },
+    "lock25": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    },
+    "lock50": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    },
+    "trail_arm15_gb25_stop30": {
+     "exit_pct": -35.5,
+     "minutes": 14.4
+    },
+    "trail_arm30_gb30_stop30": {
+     "exit_pct": -30,
+     "minutes": 14.4
+    },
+    "hold_eod": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    }
+   },
+   "best_exit_template": "trail_arm30_gb30_stop30",
+   "best_exit_pct": -30,
+   "status": "ok"
+  },
+  "realizable": {
+   "entry_quote_late": true,
+   "entry_ask": 4.7,
+   "entry_bid": 2.3,
+   "entry_lag_s": 862.7,
+   "spread_pct_at_entry": 104.3,
+   "real_peak_pct": -20.2,
+   "real_peak_min": 14.5,
+   "real_eod_pct": -99.8,
+   "real_t_plus10_min": null,
+   "real_t_plus25_min": null,
+   "real_t_plus50_min": null,
+   "status": "ok"
+  },
+  "erraticness": {
+   "status": "ok",
+   "rs_range_vol_per_min_pct": 9.017,
+   "kaufman_er_to_peak": null,
+   "kaufman_er_session": 0.402,
+   "ref_stop_pct": 30,
+   "wick_only_hits": 0,
+   "wick_only_hit_rate": 0.0,
+   "close_hits": 174,
+   "jumps_n": 3,
+   "jumps_before_peak_n": 0,
+   "jumps": [
+    {
+     "index": 114,
+     "return_pct": -25.0,
+     "stat": 6.73
+    },
+    {
+     "index": 115,
+     "return_pct": -33.3,
+     "stat": 9.48
+    },
+    {
+     "index": 150,
+     "return_pct": 150.0,
+     "stat": 8.12
+    }
+   ],
+   "suddenness_best5_over_peak": 0.34,
+   "velocity_pct_per_min_to_peak": 1.46,
+   "peak_fraction_of_session": 0.04,
+   "trough_before_peak_pct": -35.5,
+   "stop_survival": {
+    "stop20": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop30": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop40": {
+     "wick_min": 15.4,
+     "close_min": 15.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    }
+   }
+  },
+  "direction_touch": {
+   "verdict": "wrong",
+   "first_touch_min": null,
+   "adverse_touch_min": 11.4,
+   "band_pct": 0.201,
+   "rs_per_min_pct": 0.026,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "realizable_stop_pct": 30.0,
+   "risk": "deep",
+   "dd_before_payoff_pct": -35.5,
+   "trough_before_peak_pct": -35.5,
+   "stops_surviving_to_peak": [
+    "stop20",
+    "stop30",
+    "stop40"
+   ]
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 0.83,
+   "vwap_dist_signed_pct": -0.058,
+   "orb15_position": null,
+   "spread_pct_at_entry": 104.3,
+   "nbbo_size_imbalance_at_entry": 0.0,
+   "tod_bucket": "premarket"
+  },
+  "verdict": {
+   "accuracy": "wrong",
+   "accuracy_30m": "wrong",
+   "coincidence": "n/a",
+   "timing": "endure",
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "risk": "deep",
+   "erraticness": "unknown",
+   "best_exit_template": "trail_arm30_gb30_stop30",
+   "version": 2
+  }
+ }
+]

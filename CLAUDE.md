@@ -39,23 +39,43 @@ shipped inside the package at `src/discord_mod_bot/config.yaml`) holds
 declarative per-command gates and webhook URLs. They're intentionally
 separate so the YAML can be committed while secrets stay out of git.
 
-**Pure-function split.** `report.py`, `commands.py`, and `config_loader.py`
-are I/O-free and have no `discord.py` dependency — they're imported and
+**Pure-function split.** `report.py`, `alert_grades.py`, `autocomplete.py`,
+and `config_loader.py` have no `discord.py` dependency — they're imported and
 unit-tested directly. `bot.py` is the only file that touches `discord.py`
 or the trading webhook. When adding logic, push it into the pure modules so
 it stays testable; reserve `bot.py` for wiring.
 
-**Command flow.** `bot.py:_register_commands` registers each `@bot.command`
-which (1) calls `_gate(ctx, name)` — channel allowlist + YAML `enabled` +
-`allowed-by: admin` check — then (2) calls the corresponding
-`_cmd_*(ctx, args)` handler. Args come through `commands.parse_args`, which
-splits raw discord-args into `subcommand / positional / flags / options`.
-Per-command metadata lives in `_SPECS` (declared near the top of `bot.py`).
+**Command flow.** `bot.py:_register_commands` registers each
+`@bot.hybrid_command` (slash + prefix from one decorator) which (1) calls
+`_gate(ctx, name)` — channel allowlist + YAML `enabled` + `allowed-by:
+admin` check — then (2) delegates to a thin `_cmd_*(ctx, **kwargs)` handler
+that tests can call directly. Arguments are typed function parameters;
+`app_commands.describe` and `.autocomplete` decorate the command.
 
-**Adding a new command** requires three coordinated edits: add a
-`CommandSpec` to `_SPECS`, register a handler in `_register_commands`, and
-add a matching entry under `commands:` in `config.yaml` (otherwise it
-silently defaults to enabled / members-only).
+**Adding a new command** requires two coordinated edits: register the
+command + handler in `_register_commands`, and add a matching entry under
+`commands:` in `config.yaml` (otherwise it silently defaults to enabled /
+members-only). New slash commands only appear if `MOD_BOT_SYNC_GUILD_ID`
+is set.
+
+**Alert-grading report.** `/grade [date]` (alias `/scorecard`) and
+`python -m discord_mod_bot.post_alert_grades [date] [--dry-run]` deliver the
+ledger that pytrade-bot writes to `MOD_BOT_ALERT_GRADES_DIR` (default
+`~/pytrade-signal-grades`). That ledger is the contract between the repos.
+**Ownership rule: pytrade-bot owns everything rendered; this bot owns
+everything delivered or clicked, and never composes a card.** `discord.json`
+is already post-shaped and every number belongs to pytrade-bot —
+`alert_grades.py` lists days and loads files verbatim, and never recomputes
+or reformats a grade. A field missing from a view is pytrade-bot's to add.
+
+The day's `run.json` manifest drives the three posting branches:
+`partial_intraday` true means the session was still open when it was graded,
+so nothing is posted (a skip, not a failure — cron runs again after the
+close); `png` null means no contract had bars, so the embeds post without the
+image and the `attachment://` reference is dropped with it; a `png` the
+manifest names but that is not on disk is an error. `MOD_BOT_ALERT_GRADES_ENV`
+picks the destination channel and production is opt-in — anything but the
+literal `production` posts to the dev channel.
 
 **Webhook proxy model.** `WebhookClient` (in `bot.py`) does the outbound
 GETs against the trading server. `DiscordWebhookPoster` and the
@@ -84,7 +104,10 @@ replies in-channel. Leave them in place unless cleaning up deliberately.
 
 ## In-flight work
 
-`docs/slash-migration.md` contains a concrete plan to migrate the three
-prefix commands to discord.py hybrid commands (slash + prefix) with
-autocomplete and ephemeral responses. Read it before touching `bot.py`
-command registration — the current handler shape will change.
+`docs/handoffs/2026-09-04-alert-grades-report.md` is the plan for the
+alert-grading report. Phase 1 (config, loader, sender, poster, `/grade`) is
+done; phase 2 (`views.py` — a click router whose select and buttons resolve a
+`custom_id` to a card pytrade-bot pre-rendered under `days/<date>/cards/`)
+and phase 3 (Components V2, blocked on the design) are not.
+`docs/slash-migration.md` is the completed hybrid-command migration, kept
+for context.
