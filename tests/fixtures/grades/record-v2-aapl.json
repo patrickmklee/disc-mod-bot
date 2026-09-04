@@ -1,0 +1,146 @@
+{
+ "key": "2026-09-02|sidea|homer|AAPL|call|10:31:28",
+ "lane": "sidea",
+ "source": "homer",
+ "ticker": "AAPL",
+ "direction": "call",
+ "alert_et": "10:31:28",
+ "occ": "AAPL260902C00325000",
+ "verdict": {
+  "accuracy": "right",
+  "accuracy_30m": "flat",
+  "coincidence": "n/a",
+  "timing": "endure",
+  "payoff": "paid_big",
+  "payoff_realizable": true,
+  "risk": "moderate",
+  "erraticness": "mixed",
+  "best_exit_template": "lock50",
+  "version": 2
+ },
+ "direction_touch": {
+  "verdict": "right",
+  "first_touch_min": 58.5,
+  "adverse_touch_min": null,
+  "band_pct": 0.627,
+  "rs_per_min_pct": 0.081,
+  "band_sigmas": 1.0,
+  "band_bars": 30,
+  "band_src": "pre_alert",
+  "horizon_min": 60
+ },
+ "payoff_risk": {
+  "payoff": "paid_big",
+  "payoff_realizable": true,
+  "realizable_stop_pct": 30.0,
+  "risk": "moderate",
+  "dd_before_payoff_pct": -26.1,
+  "trough_before_peak_pct": -38.6,
+  "stops_surviving_to_peak": [
+   "stop40"
+  ]
+ },
+ "clues": {
+  "registered": "2026-09-03",
+  "pre_alert_rel_volume": 2.98,
+  "vwap_dist_signed_pct": -0.157,
+  "orb15_position": "inside",
+  "spread_pct_at_entry": 4.4,
+  "nbbo_size_imbalance_at_entry": -0.21,
+  "tod_bucket": "morning_10-11_30"
+ },
+ "erraticness": {
+  "status": "ok",
+  "rs_range_vol_per_min_pct": 8.614,
+  "kaufman_er_to_peak": 0.32,
+  "kaufman_er_session": 0.026,
+  "ref_stop_pct": 30,
+  "wick_only_hits": 23,
+  "wick_only_hit_rate": 0.07,
+  "close_hits": 44,
+  "jumps_n": 2,
+  "jumps_before_peak_n": 0,
+  "suddenness_best5_over_peak": 0.72,
+  "velocity_pct_per_min_to_peak": 2.72,
+  "peak_fraction_of_session": 0.18,
+  "trough_before_peak_pct": -38.6,
+  "stop_survival": {
+   "stop20": {
+    "wick_min": 2.5,
+    "close_min": 2.5,
+    "wick_before_peak": true,
+    "close_before_peak": true
+   },
+   "stop30": {
+    "wick_min": 22.5,
+    "close_min": 22.5,
+    "wick_before_peak": true,
+    "close_before_peak": true
+   },
+   "stop40": {
+    "wick_min": 77.5,
+    "close_min": 77.5,
+    "wick_before_peak": false,
+    "close_before_peak": false
+   }
+  }
+ },
+ "contract": {
+  "baseline": 0.88,
+  "peak_pct": 164.8,
+  "peak_min": 60.5,
+  "trough_pct": -93.2,
+  "eod_pct": -84.1,
+  "t_plus10_min": 15.5,
+  "dd_before_plus10_pct": -26.1,
+  "t_plus25_min": 52.5,
+  "t_plus50_min": 53.5,
+  "best_exit_template": "lock50",
+  "best_exit_pct": 50,
+  "what_if": {
+   "lock10": {
+    "exit_pct": 10,
+    "minutes": 15.5
+   },
+   "lock25": {
+    "exit_pct": 25,
+    "minutes": 52.5
+   },
+   "lock50": {
+    "exit_pct": 50,
+    "minutes": 53.5
+   },
+   "trail_arm15_gb25_stop30": {
+    "exit_pct": -19.3,
+    "minutes": 21.5
+   },
+   "trail_arm30_gb30_stop30": {
+    "exit_pct": -30,
+    "minutes": 22.5
+   },
+   "hold_eod": {
+    "exit_pct": -84.1,
+    "minutes": 327.5
+   }
+  }
+ },
+ "underlying": {
+  "und_px_at_alert": 324.67,
+  "pre_move_signed_pct": 0.157,
+  "und_30m_signed_pct": 0.015,
+  "spy_30m_signed_pct": -0.012,
+  "und_eod_signed_pct": 0.102,
+  "und_mfe_pct": 0.705,
+  "und_mae_pct": -0.2,
+  "target_hit_min": null,
+  "stop_hit_min": null
+ },
+ "realizable": {
+  "entry_ask": 0.71,
+  "spread_pct_at_entry": 4.4,
+  "real_peak_pct": 223.9,
+  "real_peak_min": 61.2,
+  "real_eod_pct": -85.9,
+  "real_t_plus10_min": 0.4
+ }
+}

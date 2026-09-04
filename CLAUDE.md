@@ -64,9 +64,11 @@ ledger that pytrade-bot writes to `MOD_BOT_ALERT_GRADES_DIR` (default
 `~/pytrade-signal-grades`). That ledger is the contract between the repos:
 `discord.json` is already post-shaped and every number belongs to
 pytrade-bot — `alert_grades.py` reads it verbatim and never recomputes or
-reformats grades. Missing fields are pytrade-bot's to add. Records on disk
-are verdict v1; `alert_card` renders whichever verdict keys a record
-carries so v2 needs no change here. `MOD_BOT_ALERT_GRADES_ENV` picks the
+reformats grades. Missing fields are pytrade-bot's to add. `alert_card`
+renders verdict v1 and v2 from the same builder: the verdict field is
+generic over whatever keys a record carries, and v2's `direction_touch`,
+`payoff_risk`, `erraticness`, and `clues` blocks each get a field that is
+skipped when absent. `MOD_BOT_ALERT_GRADES_ENV` picks the
 destination channel and production is opt-in — anything but the literal
 `production` posts to the dev channel.
 

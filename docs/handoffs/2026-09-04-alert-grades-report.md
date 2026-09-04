@@ -25,7 +25,7 @@ says so explicitly.
 
 ## What already exists (do not rebuild)
 
-pytrade-bot branch `worktree-feature+alert-grading-daily` (draft PR #437)
+pytrade-bot (PR #437 merged 2026-09-03; verdict v2 is PR #450 on `feature/alert-grading-verdict-v2`)
 produces, every trading morning, a ledger outside both repos:
 
 ```

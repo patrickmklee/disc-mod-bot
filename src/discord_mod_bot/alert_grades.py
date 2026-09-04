@@ -144,10 +144,12 @@ def alert_card(record: dict[str, Any]) -> dict[str, Any]:
 		"fields": [],
 	}
 	_add(embed, "Verdict", _verdict_lines(verdict))
+	_add(embed, "Direction", _direction_lines(record.get("direction_touch") or {}))
+	_add(embed, "Payoff & risk", _payoff_risk_lines(record.get("payoff_risk") or {}))
+	_add(embed, "Erraticness", _erraticness_lines(record.get("erraticness") or {}))
 	_add(embed, "Underlying", _underlying_lines(record.get("underlying") or {}))
 	_add(embed, "Contract", _contract_lines(record.get("contract") or {}))
 	_add(embed, "Realizable", _realizable_lines(record.get("realizable") or {}))
-	_add(embed, "Erraticness", _kv_lines(record.get("erraticness") or {}))
 	_add(embed, "Clues", _kv_lines(record.get("clues") or {}))
 	embed["footer"] = {"text": _truncate(str(record.get("key") or ""), 2048)}
 	return embed
@@ -219,11 +221,10 @@ def split_for_post(embeds: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
 
 
 def _headline(record: dict[str, Any]) -> str:
-	strike = _num(record.get("strike"))
-	return (
-		f"{record.get('ticker', '?')} {record.get('direction', '?')} {strike}"
-		f" — {record.get('alert_et', '?')} ET"
-	)
+	bits = [str(record.get("ticker", "?")), str(record.get("direction", "?"))]
+	if record.get("strike") is not None:
+		bits.append(_num(record["strike"]))
+	return " ".join(bits) + f" — {record.get('alert_et', '?')} ET"
 
 
 def _describe(record: dict[str, Any]) -> str:
@@ -231,15 +232,89 @@ def _describe(record: dict[str, Any]) -> str:
 	if record.get("occ"):
 		bits.append(f"`{record['occ']}`")
 	levels = [
-		f"ref {_num(record.get('ref_price'))}",
-		f"target {_num(record.get('target'))}",
-		f"stop {_num(record.get('stop'))}",
+		f"{name} {_num(record[key])}"
+		for name, key in (("ref", "ref_price"), ("target", "target"), ("stop", "stop"))
+		if record.get(key) is not None
 	]
-	return " · ".join(bits) + "\n" + " · ".join(levels)
+	head = " · ".join(bits)
+	return head + "\n" + " · ".join(levels) if levels else head
 
 
 def _verdict_lines(verdict: dict[str, Any]) -> list[str]:
-	return [f"{_label(k)}: **{v}**" for k, v in verdict.items() if v not in (None, "")]
+	"""Generic on purpose: v1 and v2 differ, and v2 may grow again. `version`
+	is bookkeeping, not a verdict."""
+	return [
+		f"{_label(k)}: **{_word(v)}**"
+		for k, v in verdict.items()
+		if k != "version" and v not in (None, "")
+	]
+
+
+def _direction_lines(block: dict[str, Any]) -> list[str]:
+	"""verdict v2: first touch of a noise-scaled band, not a 30-min snapshot.
+	The band is recorded per alert so the call can be re-cut from the ledger.
+	"""
+	if not block:
+		return []
+	if block.get("reason") and block.get("first_touch_min") is None:
+		return [f"**{_word(block.get('verdict'))}** — _{block['reason']}_"]
+	touch = block.get("first_touch_min")
+	adverse = block.get("adverse_touch_min")
+	lines = [
+		f"**{_word(block.get('verdict'))}**"
+		+ (f" · first touch {_num(touch)}m" if touch is not None else " · no touch")
+		+ (f" · adverse touch {_num(adverse)}m" if adverse is not None else "")
+	]
+	if block.get("band_pct") is not None:
+		lines.append(
+			f"band ±{_num(block['band_pct'])}%"
+			f" = {_num(block.get('band_sigmas'))}σ × {_num(block.get('rs_per_min_pct'))}%/min"
+			f" over {_num(block.get('band_bars'))} bars, {_num(block.get('horizon_min'))}m horizon"
+		)
+	return lines
+
+
+def _payoff_risk_lines(block: dict[str, Any]) -> list[str]:
+	if not block:
+		return []
+	realizable = block.get("payoff_realizable")
+	lines = [
+		f"**{_word(block.get('payoff'))}**"
+		+ (
+			""
+			if realizable is None
+			else f" · {'realizable' if realizable else 'not realizable'}"
+			f" (stop {_num(block.get('realizable_stop_pct'))}%)"
+		)
+	]
+	if block.get("dd_before_payoff_pct") is not None:
+		lines.append(
+			f"{_word(block.get('risk'))} drawdown {_pct(block['dd_before_payoff_pct'])} before payoff"
+			f" · trough before peak {_pct(block.get('trough_before_peak_pct'))}"
+		)
+	stops = block.get("stops_surviving_to_peak")
+	if stops is not None:
+		lines.append("stops surviving to peak: " + (", ".join(stops) if stops else "none"))
+	return lines
+
+
+def _erraticness_lines(block: dict[str, Any]) -> list[str]:
+	if not block:
+		return []
+	if block.get("status") != "ok":
+		return _status_only(block)
+	return [
+		f"Kaufman ER {_num(block.get('kaufman_er_to_peak'))} to peak"
+		f" · {_num(block.get('kaufman_er_session'))} session",
+		f"range {_num(block.get('rs_range_vol_per_min_pct'))}%/min"
+		f" · jumps {_num(block.get('jumps_n'))}"
+		f" ({_num(block.get('jumps_before_peak_n'))} before peak)"
+		f" · wick-only hits {_num(block.get('wick_only_hits'))}"
+		f" at -{_num(block.get('ref_stop_pct'))}%",
+		f"suddenness {_num(block.get('suddenness_best5_over_peak'))}"
+		f" · {_num(block.get('velocity_pct_per_min_to_peak'))}%/min to peak"
+		f" · peak at {_num(block.get('peak_fraction_of_session'))} of session",
+	]
 
 
 def _underlying_lines(block: dict[str, Any]) -> list[str]:
@@ -270,7 +345,11 @@ def _contract_lines(block: dict[str, Any]) -> list[str]:
 		return _status_only(block)
 	lines = [
 		f"baseline {_num(block.get('baseline'))}"
-		f" · entry lag {_num(block.get('entry_lag_min'))}m",
+		+ (
+			f" · entry lag {_num(block['entry_lag_min'])}m"
+			if block.get("entry_lag_min") is not None
+			else ""
+		),
 		f"peak {_pct(block.get('peak_pct'))} @ {_num(block.get('peak_min'))}m"
 		f" · trough {_pct(block.get('trough_pct'))}"
 		f" · EOD {_pct(block.get('eod_pct'))}",
@@ -292,7 +371,7 @@ def _realizable_lines(block: dict[str, Any]) -> list[str]:
 		return _status_only(block)
 	lines = [
 		f"entry bid/ask {_num(block.get('entry_bid'))}/{_num(block.get('entry_ask'))}"
-		f" · spread {_pct(block.get('spread_pct_at_entry'))}"
+		f" · spread {_num(block.get('spread_pct_at_entry'))}%"
 	]
 	if block.get("entry_lag_s") is not None:
 		lines.append(f"quote lag {_num(block['entry_lag_s'])}s")
@@ -339,6 +418,12 @@ def _mark(accuracy: str) -> str:
 
 def _label(key: str) -> str:
 	return str(key).replace("_", " ")
+
+
+def _word(value: Any) -> str:
+	if isinstance(value, bool):
+		return "yes" if value else "no"
+	return str(value).replace("_", " ") if value not in (None, "") else "unknown"
 
 
 def _pct(value: Any) -> str:
