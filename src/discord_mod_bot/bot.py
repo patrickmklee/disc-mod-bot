@@ -375,22 +375,30 @@ class DiscordModBot:
                 channel=channel,
             )
 
-        @self.bot.hybrid_command(
-            name="grade",
-            aliases=["scorecard"],
-            description="Post the alert-grading report for a trading day.",
-        )
-        @app_commands.default_permissions(administrator=True)
-        @app_commands.describe(date="Ledger day (YYYY-MM-DD); defaults to the newest.")
-        async def grade(ctx, date: Optional[str] = None):
-            if not await self._gate(ctx, "grade"):
-                return
-            await self._cmd_grade(ctx, date=date)
+        # `aliases` is a prefix-command feature -- app commands have no alias
+        # concept -- so /scorecard only exists if it is registered as its own
+        # command. Both gate on "grade", so config.yaml keeps one switch.
+        for _name in ("grade", "scorecard"):
 
-        @grade.autocomplete("date")
-        async def _date_ac(interaction, current: str):
-            days = await asyncio.to_thread(alert_grades.list_days, self.config.grades_dir)
-            return [Choice(name=d, value=d) for d in ac.match(days, current)]
+            @self.bot.hybrid_command(
+                name=_name,
+                description="Post the alert-grading report for a trading day.",
+            )
+            @app_commands.default_permissions(administrator=True)
+            @app_commands.describe(
+                date="Ledger day (YYYY-MM-DD); defaults to the newest."
+            )
+            async def grade(ctx, date: Optional[str] = None):
+                if not await self._gate(ctx, "grade"):
+                    return
+                await self._cmd_grade(ctx, date=date)
+
+            @grade.autocomplete("date")
+            async def _date_ac(interaction, current: str):
+                days = await asyncio.to_thread(
+                    alert_grades.list_days, self.config.grades_dir
+                )
+                return [Choice(name=d, value=d) for d in ac.match(days, current)]
 
         async def _ac(values_coro, current):
             return [Choice(name=v, value=v) for v in ac.match(await values_coro, current)]
