@@ -63,6 +63,16 @@ def day_view(day: alert_grades.DayReport) -> Optional[RawView]:
 	return RawView(rows, components_v2=False) if rows else None
 
 
+def post_view(day: alert_grades.DayReport) -> Optional[RawView]:
+	"""The whole day post as pytrade-bot wrote it, or None when it cannot send.
+
+	The select and buttons are inside the container, so this view IS the click
+	layer -- the classic-embed `day_view` is not also attached on this path.
+	"""
+	components = alert_grades.post_components(day)
+	return RawView(components, components_v2=True) if components else None
+
+
 def card_files(card: alert_grades.Card) -> list[discord.File]:
 	"""Upload the files the card's `attachment://` references resolve against."""
 	return [discord.File(path, filename=path.name) for path in card.attachments]

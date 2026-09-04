@@ -86,13 +86,22 @@ def main(argv: list[str] | None = None) -> int:
 	# A day the grader wrote before it rendered post.json posts without the
 	# select and buttons; say so here rather than let it pass as a full post.
 	rows = alert_grades.day_action_rows(day)
+	v2 = alert_grades.use_v2(day, config.grades_layout)
+	shape = (
+		f"Components V2, {alert_grades.count_components(day.post)} components"
+		if v2
+		else f"classic embeds, {len(day.embeds)} in {len(groups)} message(s), "
+		f"{alert_grades.payload_chars(day.embeds)} chars"
+	)
+	if not v2 and alert_grades.v2_ready(day):
+		shape += " (V2 available, forced off by MOD_BOT_ALERT_GRADES_LAYOUT)"
+	elif not v2 and day.post:
+		shape += " (post.json present but not sendable)"
 	LOG.info(
-		"%s: %d alerts, %d embeds in %d message(s), %d chars, tape %s, %s -> %s channel %d",
+		"%s: %d alerts, %s, tape %s, %s -> %s channel %d",
 		day.date,
 		len(day.records),
-		len(day.embeds),
-		len(groups),
-		alert_grades.payload_chars(day.embeds),
+		shape,
 		day.tape_path or "none",
 		f"{len(rows)} action row(s)" if rows else "no click layer",
 		config.grades_env,
