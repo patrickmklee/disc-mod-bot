@@ -36,6 +36,14 @@ EMBED_CHAR_BUDGET = 6000
 MANIFEST_FILENAME = "run.json"
 POST_FILENAME = "post.json"
 
+# Components V2 budgets. A message may hold 40 components counting every
+# nesting level, and the V2 flag suppresses `embeds` on the message it is set
+# on and cannot be removed afterwards -- so the layout is decided before the
+# send, never patched after it.
+MAX_COMPONENTS = 40
+LAYOUT_V2 = "v2"
+LAYOUT_CLASSIC = "classic"
+
 # The clicks that edit the ephemeral card in place instead of opening a new
 # one. They are the tails of the grader's "alert_exits" / "alert_prev" /
 # "alert_next" custom_id templates; a test pins them to run.json's
@@ -224,6 +232,65 @@ def day_action_rows(day: DayReport) -> list[dict[str, Any]]:
 	rows: list[dict[str, Any]] = []
 	_collect_action_rows(day.post.get("components") or [], rows)
 	return rows
+
+
+def count_components(payload: dict[str, Any]) -> int:
+	"""Every component in the tree. A V2 container is one component holding
+	many, so counting the top-level list would pass any budget vacuously."""
+	def walk(items: Iterable[Any]) -> int:
+		total = 0
+		for component in items:
+			if not isinstance(component, dict):
+				continue
+			total += 1
+			total += walk(component.get("components") or [])
+			accessory = component.get("accessory")
+			if isinstance(accessory, dict):
+				total += 1 + walk(accessory.get("components") or [])
+		return total
+	return walk(payload.get("components") or [])
+
+
+def post_components(day: "DayReport") -> list[dict[str, Any]] | None:
+	"""pytrade-bot's V2 message body, or None when the day cannot send one."""
+	return list(day.post["components"]) if v2_ready(day) else None
+
+
+def _references_attachment(components: Iterable[Any]) -> bool:
+	for component in components:
+		if not isinstance(component, dict):
+			continue
+		for item in component.get("items") or []:
+			url = ((item or {}).get("media") or {}).get("url") or ""
+			if str(url).startswith("attachment://"):
+				return True
+		if _references_attachment(component.get("components") or []):
+			return True
+	return False
+
+
+def v2_ready(day: "DayReport") -> bool:
+	"""True when the day's post.json can go on the wire as written.
+
+	Refused, and the classic embeds post instead, when: the grader wrote no
+	post; it is over the component budget; or it points `attachment://` at an
+	image this day has no file for, which Discord renders as a broken image
+	rather than an error.
+	"""
+	components = day.post.get("components")
+	if not isinstance(components, list) or not components:
+		return False
+	if count_components(day.post) > MAX_COMPONENTS:
+		return False
+	if _references_attachment(components) and day.tape_path is None:
+		return False
+	return True
+
+
+def use_v2(day: "DayReport", layout: str) -> bool:
+	"""The layout actually sent: the knob can force the classic embeds, but it
+	cannot force V2 onto a day whose post is not sendable."""
+	return layout != LAYOUT_CLASSIC and v2_ready(day)
 
 
 def edits_in_place(custom_id: str) -> bool:

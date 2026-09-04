@@ -53,6 +53,7 @@ class ModBotConfig:
     grades_env: str = "development"
     grades_channel_dev: int = 0
     grades_channel_prod: int = 0
+    grades_layout: str = alert_grades.LAYOUT_V2
     yaml: YamlConfig = field(default_factory=YamlConfig)
 
     @property
@@ -104,6 +105,12 @@ class ModBotConfig:
             ).strip().lower(),
             grades_channel_dev=_int_env("MOD_BOT_ALERT_GRADES_CHANNEL_DEV", 0),
             grades_channel_prod=_int_env("MOD_BOT_ALERT_GRADES_CHANNEL_PROD", 0),
+            # "classic" forces the phase-1 embeds. The escape hatch matters
+            # because the V2 flag cannot be edited off a message that has it:
+            # recovering from a bad V2 render means delete and repost.
+            grades_layout=os.environ.get(
+                "MOD_BOT_ALERT_GRADES_LAYOUT", alert_grades.LAYOUT_V2
+            ).strip().lower(),
             yaml=yaml_cfg,
         )
 
@@ -593,6 +600,9 @@ class DiscordModBot:
         """
         # day.username is webhook-only -- a bot cannot set a per-message
         # username -- so the grader's "(trial)" marker is dropped here.
+        if alert_grades.use_v2(day, self.config.grades_layout):
+            await self._send_day_report_v2(destination, day)
+            return
         groups = alert_grades.split_for_post(day.embeds)
         # The select and buttons go under the last message so they sit at the
         # bottom of the report; a day the grader wrote no post.json for has
@@ -608,6 +618,23 @@ class DiscordModBot:
             embeds = [self._discord_embed(e, with_image=attach) for e in group]
             extra = {"view": view} if view and index == len(groups) - 1 else {}
             await destination.send(embeds=embeds, files=files, **extra)
+
+    async def _send_day_report_v2(self, destination, day: alert_grades.DayReport) -> None:
+        """Send pytrade-bot's `post.json` as one Components V2 message.
+
+        One message, not a split: the 6000-character embed budget that forces
+        the classic path to split does not apply, and the grader holds the post
+        inside the V2 text budget itself. No embeds ride along -- the flag
+        suppresses them -- so the tape is uploaded as the file the post's
+        `attachment://` reference resolves against.
+        """
+        view = self.views.post_view(day)
+        files = (
+            [self.discord.File(day.tape_path, filename=day.png_name)]
+            if day.tape_path is not None
+            else []
+        )
+        await destination.send(view=view, files=files)
 
     def _discord_embed(self, payload: dict[str, Any], *, with_image: bool = False):
         embed = self.discord.Embed(
