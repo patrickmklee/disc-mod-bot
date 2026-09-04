@@ -1,0 +1,37 @@
+{
+ "kind": "raw_day",
+ "custom_id": "ag:2026-09-02:raw",
+ "accent_color": 4145479,
+ "title": "Raw numbers · Sep 2",
+ "subtitle": "acc30 = retired 30-min snapshot · und/SPY = signed 30-min move · pre = 15-min pre-alert move · pay / real / risk / err / ER = payoff, realizable, risk, erraticness, efficiency ratio to peak · l10/25/50 = lock · t = trail · nbbo = realizable peak · spr = spread at entry",
+ "blocks": [
+  {
+   "kind": "raw",
+   "title": null,
+   "text": "alert                    lane    acc acc30 touch   pay real  risk   err    ER  und30  spy30    pre    peak    @m   close  +10m     dd    l10    l25    l50  t15/25  t30/30    nbbo   spr\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\nAVGO put 08:35 homer    sidea  right right   17m     -    -     -     -     -  +0.3%  +0.1%  +0.1%       -     -       - never      -      -      -      -       -       -       -     -\nMETA put 09:15 homer    sidea  wrong wrong     -  paid    n  deep     -     -  -2.3%  -0.1%  -0.0%    +21%   14m   -100%   14m   -36%   -36%  -100%  -100%    -36%    -30%    -20%  104%"
+  }
+ ],
+ "attachment": "ledger.csv",
+ "footer": "Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration.",
+ "buttons": [],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 4145479,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Raw numbers · Sep 2\n-# acc30 = retired 30-min snapshot · und/SPY = signed 30-min move · pre = 15-min pre-alert move · pay / real / risk / err / ER = payoff, realizable, risk, erraticness, efficiency ratio to peak · l10/25/50 = lock · t = trail · nbbo = realizable peak · spr = spread at entry"
+    },
+    {
+     "type": 10,
+     "content": "```\nalert                    lane    acc acc30 touch   pay real  risk   err    ER  und30  spy30    pre    peak    @m   close  +10m     dd    l10    l25    l50  t15/25  t30/30    nbbo   spr\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\nAVGO put 08:35 homer    sidea  right right   17m     -    -     -     -     -  +0.3%  +0.1%  +0.1%       -     -       - never      -      -      -      -       -       -       -     -\nMETA put 09:15 homer    sidea  wrong wrong     -  paid    n  deep     -     -  -2.3%  -0.1%  -0.0%    +21%   14m   -100%   14m   -36%   -36%  -100%  -100%    -36%    -30%    -20%  104%\n```"
+    },
+    {
+     "type": 10,
+     "content": "-# Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration."
+    }
+   ]
+  }
+ ]
+}

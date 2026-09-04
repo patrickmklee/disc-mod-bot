@@ -1,0 +1,147 @@
+{
+ "kind": "raw_alert",
+ "custom_id": "ag:2026-09-02:alert:1:raw",
+ "index": 1,
+ "key": "2026-09-02|sidea|homer|AVGO|put|08:35:16",
+ "accent_color": 14244134,
+ "title": "Raw numbers · AVGO put 08:35",
+ "blocks": [
+  {
+   "kind": "raw",
+   "title": null,
+   "text": "{\n \"date\": \"2026-09-02\",\n \"lane\": \"sidea\",\n \"source\": \"homer\",\n \"ticker\": \"AVGO\",\n \"direction\": \"put\",\n \"alert_ts\": \"2026-09-02T12:35:16.068000+00:00\",\n \"message_id\": \"\",\n \"strike\": 370.0,\n \"expire\": \"2026-09-02\",\n \"occ\": \"AVGO260902P00370000\",\n \"ref_price\": 370.37,\n \"target\": 364.52,\n \"stop\": 373.3,\n \"mid_at_alert\": null,\n \"extra\": {\n  \"stage\": 2,\n  \"stage_label\": \"DISTRIBUTION CONFIRMED\",\n  \"action\": \"ENTER NOW\",\n  \"otm_strike\": 365.0,\n  \"conviction_tier\": \"\",\n  \"final_score\": 43,\n  \"score_grade\": \"B\",\n  \"signal_id\": 1022\n },\n \"key\": \"2026-09-02|sidea|homer|AVGO|put|08:35:16\",\n \"alert_et\": \"08:35:16\",\n \"underlying\": {\n  \"und_px_at_alert\": 370.4,\n  \"und_ref_vs_scanner_pct\": 0.008,\n  \"pre_move_signed_pct\": 0.108,\n  \"und_5m_signed_pct\": 0.054,\n  \"spy_5m_signed_pct\": 0.013,\n  \"und_15m_signed_pct\": 0.367,\n  \"spy_15m_signed_pct\": 0.05,\n  \"und_30m_signed_pct\": 0.31,\n  \"spy_30m_signed_pct\": 0.051,\n  \"und_60m_signed_pct\": 1.336,\n  \"spy_60m_signed_pct\": -0.005,\n  \"und_eod_signed_pct\": 0.742,\n  \"und_mfe_pct\": 1.552,\n  \"und_mae_pct\": -0.238,\n  \"target_hit_min\": null,\n  \"target_already_past_at_alert\": false,\n  \"stop_hit_min\": null,\n  \"status\": \"ok\"\n },\n \"contract\": {\n  \"status\": \"no_option_bars\"\n },\n \"realizable\": {\n  \"status\": \"no_quotes\"\n },\n \"erraticness\": {\n  \"status\": \"no_path\"\n },\n \"direction_touch\": {\n  \"verdict\": \"right\",\n  \"first_touch_min\": 17.7,\n  \"adverse_touch_min\": null,\n  \"band_pct\": 0.519,\n  \"rs_per_min_pct\": 0.067,\n  \"band_sigmas\": 1.0,\n  \"band_bars\": 30,\n  \"band_src\": \"pre_alert\",\n  \"horizon_min\": 60\n },\n \"payoff_risk\": {\n  \"payoff\": \"unknown\",\n  \"risk\": \"unknown\"\n },\n \"clues\": {\n  \"registered\": \"2026-09-03\",\n  \"pre_alert_rel_volume\": 1.9,\n  \"vwap_dist_signed_pct\": -0.268,\n  \"orb15_position\": null,\n  \"spread_pct_at_entry\": null,\n  \"nbbo_size_imbalance_at_entry\": null,\n  \"tod_bucket\": \"premarket\"\n },\n \"verdict\": {\n  \"accuracy\": \"right\",\n  \"accuracy_30m\": \"right\",\n  \"coincidence\": \"idiosyncratic\",\n  \"timing\": \"unknown\",\n  \"payoff\": \"unknown\",\n  \"payoff_realizable\": null,\n  \"risk\": \"unknown\",\n  \"erraticness\": \"unknown\",\n  \"best_exit_template\": \"unknown\",\n  \"version\": 2\n }\n}"
+  }
+ ],
+ "footer": "Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration.",
+ "record": {
+  "date": "2026-09-02",
+  "lane": "sidea",
+  "source": "homer",
+  "ticker": "AVGO",
+  "direction": "put",
+  "alert_ts": "2026-09-02T12:35:16.068000+00:00",
+  "message_id": "",
+  "strike": 370.0,
+  "expire": "2026-09-02",
+  "occ": "AVGO260902P00370000",
+  "ref_price": 370.37,
+  "target": 364.52,
+  "stop": 373.3,
+  "mid_at_alert": null,
+  "extra": {
+   "stage": 2,
+   "stage_label": "DISTRIBUTION CONFIRMED",
+   "action": "ENTER NOW",
+   "otm_strike": 365.0,
+   "conviction_tier": "",
+   "final_score": 43,
+   "score_grade": "B",
+   "signal_id": 1022
+  },
+  "key": "2026-09-02|sidea|homer|AVGO|put|08:35:16",
+  "alert_et": "08:35:16",
+  "underlying": {
+   "und_px_at_alert": 370.4,
+   "und_ref_vs_scanner_pct": 0.008,
+   "pre_move_signed_pct": 0.108,
+   "und_5m_signed_pct": 0.054,
+   "spy_5m_signed_pct": 0.013,
+   "und_15m_signed_pct": 0.367,
+   "spy_15m_signed_pct": 0.05,
+   "und_30m_signed_pct": 0.31,
+   "spy_30m_signed_pct": 0.051,
+   "und_60m_signed_pct": 1.336,
+   "spy_60m_signed_pct": -0.005,
+   "und_eod_signed_pct": 0.742,
+   "und_mfe_pct": 1.552,
+   "und_mae_pct": -0.238,
+   "target_hit_min": null,
+   "target_already_past_at_alert": false,
+   "stop_hit_min": null,
+   "status": "ok"
+  },
+  "contract": {
+   "status": "no_option_bars"
+  },
+  "realizable": {
+   "status": "no_quotes"
+  },
+  "erraticness": {
+   "status": "no_path"
+  },
+  "direction_touch": {
+   "verdict": "right",
+   "first_touch_min": 17.7,
+   "adverse_touch_min": null,
+   "band_pct": 0.519,
+   "rs_per_min_pct": 0.067,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "unknown",
+   "risk": "unknown"
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 1.9,
+   "vwap_dist_signed_pct": -0.268,
+   "orb15_position": null,
+   "spread_pct_at_entry": null,
+   "nbbo_size_imbalance_at_entry": null,
+   "tod_bucket": "premarket"
+  },
+  "verdict": {
+   "accuracy": "right",
+   "accuracy_30m": "right",
+   "coincidence": "idiosyncratic",
+   "timing": "unknown",
+   "payoff": "unknown",
+   "payoff_realizable": null,
+   "risk": "unknown",
+   "erraticness": "unknown",
+   "best_exit_template": "unknown",
+   "version": 2
+  }
+ },
+ "buttons": [
+  {
+   "custom_id": "ag:2026-09-02:alert:1",
+   "label": "Back to the card",
+   "style": 2
+  }
+ ],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 14244134,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Raw numbers · AVGO put 08:35"
+    },
+    {
+     "type": 10,
+     "content": "```\n{\n \"date\": \"2026-09-02\",\n \"lane\": \"sidea\",\n \"source\": \"homer\",\n \"ticker\": \"AVGO\",\n \"direction\": \"put\",\n \"alert_ts\": \"2026-09-02T12:35:16.068000+00:00\",\n \"message_id\": \"\",\n \"strike\": 370.0,\n \"expire\": \"2026-09-02\",\n \"occ\": \"AVGO260902P00370000\",\n \"ref_price\": 370.37,\n \"target\": 364.52,\n \"stop\": 373.3,\n \"mid_at_alert\": null,\n \"extra\": {\n  \"stage\": 2,\n  \"stage_label\": \"DISTRIBUTION CONFIRMED\",\n  \"action\": \"ENTER NOW\",\n  \"otm_strike\": 365.0,\n  \"conviction_tier\": \"\",\n  \"final_score\": 43,\n  \"score_grade\": \"B\",\n  \"signal_id\": 1022\n },\n \"key\": \"2026-09-02|sidea|homer|AVGO|put|08:35:16\",\n \"alert_et\": \"08:35:16\",\n \"underlying\": {\n  \"und_px_at_alert\": 370.4,\n  \"und_ref_vs_scanner_pct\": 0.008,\n  \"pre_move_signed_pct\": 0.108,\n  \"und_5m_signed_pct\": 0.054,\n  \"spy_5m_signed_pct\": 0.013,\n  \"und_15m_signed_pct\": 0.367,\n  \"spy_15m_signed_pct\": 0.05,\n  \"und_30m_signed_pct\": 0.31,\n  \"spy_30m_signed_pct\": 0.051,\n  \"und_60m_signed_pct\": 1.336,\n  \"spy_60m_signed_pct\": -0.005,\n  \"und_eod_signed_pct\": 0.742,\n  \"und_mfe_pct\": 1.552,\n  \"und_mae_pct\": -0.238,\n  \"target_hit_min\": null,\n  \"target_already_past_at_alert\": false,\n  \"stop_hit_min\": null,\n  \"status\": \"ok\"\n },\n \"contract\": {\n  \"status\": \"no_option_bars\"\n },\n \"realizable\": {\n  \"status\": \"no_quotes\"\n },\n \"erraticness\": {\n  \"status\": \"no_path\"\n },\n \"direction_touch\": {\n  \"verdict\": \"right\",\n  \"first_touch_min\": 17.7,\n  \"adverse_touch_min\": null,\n  \"band_pct\": 0.519,\n  \"rs_per_min_pct\": 0.067,\n  \"band_sigmas\": 1.0,\n  \"band_bars\": 30,\n  \"band_src\": \"pre_alert\",\n  \"horizon_min\": 60\n },\n \"payoff_risk\": {\n  \"payoff\": \"unknown\",\n  \"risk\": \"unknown\"\n },\n \"clues\": {\n  \"registered\": \"2026-09-03\",\n  \"pre_alert_rel_volume\": 1.9,\n  \"vwap_dist_signed_pct\": -0.268,\n  \"orb15_position\": null,\n  \"spread_pct_at_entry\": null,\n  \"nbbo_size_imbalance_at_entry\": null,\n  \"tod_bucket\": \"premarket\"\n },\n \"verdict\": {\n  \"accuracy\": \"right\",\n  \"accuracy_30m\": \"right\",\n  \"coincidence\": \"idiosyncratic\",\n  \"timing\": \"unknown\",\n  \"payoff\": \"unknown\",\n  \"payoff_realizable\": null,\n  \"risk\": \"unknown\",\n  \"erraticness\": \"unknown\",\n  \"best_exit_template\": \"unknown\",\n  \"version\": 2\n }\n}\n```"
+    },
+    {
+     "type": 10,
+     "content": "-# Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration."
+    },
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 2,
+       "style": 2,
+       "label": "Back to the card",
+       "custom_id": "ag:2026-09-02:alert:1"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+{
+ "kind": "exits_explainer",
+ "custom_id": "ag:2026-09-02:exits",
+ "accent_color": 4145479,
+ "title": "What the exit templates mean",
+ "subtitle": "Six rules, replayed on every contract. The report always names the one that would have paid best.",
+ "templates": [
+  {
+   "name": "lock10",
+   "template": "lock10",
+   "definition": "Sell the first print at +10%.",
+   "today": "−36%",
+   "minutes": "14m"
+  },
+  {
+   "name": "lock25",
+   "template": "lock25",
+   "definition": "Sell the first print at +25%.",
+   "today": "−100%",
+   "minutes": "394m"
+  },
+  {
+   "name": "lock50",
+   "template": "lock50",
+   "definition": "Sell the first print at +50%.",
+   "today": "−100%",
+   "minutes": "394m"
+  },
+  {
+   "name": "trail15/25",
+   "template": "trail_arm15_gb25_stop30",
+   "definition": "Arm once +15% prints, then sell when the contract gives back 25% from its peak.",
+   "today": "−36%",
+   "minutes": "14m"
+  },
+  {
+   "name": "trail30/30",
+   "template": "trail_arm30_gb30_stop30",
+   "definition": "Arm at +30%, sell on a 30% give-back from peak.",
+   "today": "−30%",
+   "minutes": "14m"
+  },
+  {
+   "name": "hold EOD",
+   "template": "hold_eod",
+   "definition": "Hold to the 16:00 close.",
+   "today": "−100%",
+   "minutes": "394m"
+  }
+ ],
+ "reference_alert": {
+  "index": 2,
+  "key": "2026-09-02|sidea|homer|META|put|09:15:37",
+  "custom_id": "ag:2026-09-02:alert:2",
+  "title": "META put 09:15 · homer",
+  "kaufman_er_to_peak": null
+ },
+ "footer": "Right column: realized on META put 09:15 · homer. Every template stops at −30% or at the close, whichever comes first. The hold row is the only place the close appears. Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration.",
+ "buttons": [],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 4145479,
+   "components": [
+    {
+     "type": 10,
+     "content": "## What the exit templates mean\n-# Six rules, replayed on every contract. The report always names the one that would have paid best.\n```\nlock10         −36%  Sell the first print at +10%.\nlock25        −100%  Sell the first print at +25%.\nlock50        −100%  Sell the first print at +50%.\ntrail15/25     −36%  Arm once +15% prints, then sell when the contract gives back 25% from its peak.\ntrail30/30     −30%  Arm at +30%, sell on a 30% give-back from peak.\nhold EOD      −100%  Hold to the 16:00 close.\n```\n-# Right column: realized on META put 09:15 · homer. Every template stops at −30% or at the close, whichever comes first. The hold row is the only place the close appears. Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration."
+    }
+   ]
+  }
+ ]
+}

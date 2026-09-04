@@ -1,0 +1,54 @@
+{
+ "kind": "alert_exits",
+ "custom_id": "ag:2026-09-02:alert:2:exits",
+ "index": 2,
+ "key": "2026-09-02|sidea|homer|META|put|09:15:37",
+ "accent_color": 14244134,
+ "title": "Exit templates · replayed on this contract",
+ "blocks": [
+  {
+   "kind": "exits",
+   "title": null,
+   "text": "lock10        -36%   sold at +14m\nlock25       -100%   sold at +394m\nlock50       -100%   sold at +394m\ntrail15/25    -36%   sold at +14m\ntrail30/30    -30%   sold at +14m\nhold EOD     -100%   sold at +394m"
+  }
+ ],
+ "footer": "Every template stops at −30% or at the close, whichever comes first. The hold row is the only place the close appears.",
+ "buttons": [
+  {
+   "custom_id": "ag:2026-09-02:alert:2",
+   "label": "Hide ▾",
+   "style": 2
+  }
+ ],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 14244134,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Exit templates · replayed on this contract"
+    },
+    {
+     "type": 10,
+     "content": "```\nlock10        -36%   sold at +14m\nlock25       -100%   sold at +394m\nlock50       -100%   sold at +394m\ntrail15/25    -36%   sold at +14m\ntrail30/30    -30%   sold at +14m\nhold EOD     -100%   sold at +394m\n```"
+    },
+    {
+     "type": 10,
+     "content": "-# Every template stops at −30% or at the close, whichever comes first. The hold row is the only place the close appears."
+    },
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 2,
+       "style": 2,
+       "label": "Hide ▾",
+       "custom_id": "ag:2026-09-02:alert:2"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
