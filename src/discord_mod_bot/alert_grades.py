@@ -25,7 +25,12 @@ from typing import Any, Iterable
 EMBEDS_PER_MESSAGE = 10
 EMBED_CHAR_BUDGET = 6000
 
+MESSAGE_CHAR_LIMIT = 2000
+
 TAPE_FILENAME = "tape.png"
+
+_FENCE_OPEN = "```json\n"
+_FENCE_CLOSE = "\n```"
 
 COLOR_RIGHT = 0x00C805
 COLOR_WRONG = 0xFF5000
@@ -148,10 +153,24 @@ def alert_card(record: dict[str, Any]) -> dict[str, Any]:
 	return embed
 
 
-def raw_block(record: dict[str, Any]) -> str:
-	"""Every ledger field for one alert, as a Discord code block."""
+def raw_blocks(record: dict[str, Any]) -> list[str]:
+	"""Every ledger field for one alert, as Discord code blocks.
+
+	A full record runs past the 2000-character message limit once the
+	`what_if` exits are included, so this splits on line boundaries and
+	returns one block per message rather than truncating fields away.
+	"""
 	body = json.dumps(record, indent=1, sort_keys=True, default=str)
-	return "```json\n" + _truncate(body, 1980) + "\n```"
+	budget = MESSAGE_CHAR_LIMIT - len(_FENCE_OPEN) - len(_FENCE_CLOSE)
+	blocks, current = [], ""
+	for line in body.splitlines():
+		line = _truncate(line, budget)
+		if current and len(current) + 1 + len(line) > budget:
+			blocks.append(_FENCE_OPEN + current + _FENCE_CLOSE)
+			current = ""
+		current = f"{current}\n{line}" if current else line
+	blocks.append(_FENCE_OPEN + current + _FENCE_CLOSE)
+	return blocks
 
 
 # ----------------------------------------------------------------------

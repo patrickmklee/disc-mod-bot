@@ -119,17 +119,33 @@ def test_alert_card_fields_fit_discord_limits(day):
 			assert len(f["value"]) <= 1024
 
 
-def test_raw_block_is_a_code_block_with_every_field(day):
-	block = alert_grades.raw_block(record(day, OK_KEY))
-	assert block.startswith("```json\n") and block.endswith("\n```")
-	assert len(block) <= 2000
-	assert "entry_lag_min" in block
+def test_raw_blocks_keep_every_field_of_a_real_record(day):
+	"""A full record does not fit one message once what_if is included, so
+	the fields have to survive across blocks rather than be truncated."""
+	rec = record(day, OK_KEY)
+	blocks = alert_grades.raw_blocks(rec)
+	assert len(blocks) > 1
+	joined = "".join(blocks)
+	for key in rec["contract"]["what_if"]:
+		assert key in joined
+	assert "entry_lag_min" in joined and "und_mfe_pct" in joined
 
 
-def test_raw_block_truncates_huge_records():
-	block = alert_grades.raw_block({"blob": "x" * 5000})
-	assert len(block) <= 2000
-	assert block.endswith("\n```")
+def test_raw_blocks_fit_the_message_limit(day):
+	for rec in day.records:
+		for block in alert_grades.raw_blocks(rec):
+			assert block.startswith("```json\n") and block.endswith("\n```")
+			assert len(block) <= alert_grades.MESSAGE_CHAR_LIMIT
+
+
+def test_raw_blocks_truncate_a_single_oversized_line():
+	"""Splitting happens on line boundaries, so one absurdly long value is
+	still cut -- visibly, with an ellipsis, rather than silently."""
+	blocks = alert_grades.raw_blocks({"blob": "x" * 5000})
+	assert len(blocks) == 3
+	assert "..." in blocks[1]
+	for block in blocks:
+		assert len(block) <= alert_grades.MESSAGE_CHAR_LIMIT
 
 
 def test_payload_chars_counts_titles_descriptions_fields_and_footers():

@@ -561,6 +561,8 @@ class DiscordModBot:
         """Send a day's embeds, splitting on the 6000-character budget and
         attaching the tape to whichever message carries the image embed.
         """
+        # day.username is webhook-only -- a bot cannot set a per-message
+        # username -- so the grader's "(trial)" marker is dropped here.
         for group in alert_grades.split_for_post(day.embeds):
             attach = day.tape_path is not None and any(e.get("image") for e in group)
             files = (
