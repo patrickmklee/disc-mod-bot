@@ -52,11 +52,44 @@
   "realizable": {
    "status": "no_quotes"
   },
+  "erraticness": {
+   "status": "no_path"
+  },
+  "direction_touch": {
+   "verdict": "right",
+   "first_touch_min": 17.7,
+   "adverse_touch_min": null,
+   "band_pct": 0.519,
+   "rs_per_min_pct": 0.067,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "unknown",
+   "risk": "unknown"
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 1.9,
+   "vwap_dist_signed_pct": -0.268,
+   "orb15_position": null,
+   "spread_pct_at_entry": null,
+   "nbbo_size_imbalance_at_entry": null,
+   "tod_bucket": "premarket"
+  },
   "verdict": {
    "accuracy": "right",
+   "accuracy_30m": "right",
    "coincidence": "idiosyncratic",
    "timing": "unknown",
-   "best_exit_template": "unknown"
+   "payoff": "unknown",
+   "payoff_realizable": null,
+   "risk": "unknown",
+   "erraticness": "unknown",
+   "best_exit_template": "unknown",
+   "version": 2
   }
  },
  {
@@ -165,11 +198,103 @@
    "real_t_plus50_min": null,
    "status": "ok"
   },
+  "erraticness": {
+   "status": "ok",
+   "rs_range_vol_per_min_pct": 9.017,
+   "kaufman_er_to_peak": null,
+   "kaufman_er_session": 0.402,
+   "ref_stop_pct": 30,
+   "wick_only_hits": 0,
+   "wick_only_hit_rate": 0.0,
+   "close_hits": 174,
+   "jumps_n": 3,
+   "jumps_before_peak_n": 0,
+   "jumps": [
+    {
+     "index": 114,
+     "return_pct": -25.0,
+     "stat": 6.73
+    },
+    {
+     "index": 115,
+     "return_pct": -33.3,
+     "stat": 9.48
+    },
+    {
+     "index": 150,
+     "return_pct": 150.0,
+     "stat": 8.12
+    }
+   ],
+   "suddenness_best5_over_peak": 0.34,
+   "velocity_pct_per_min_to_peak": 1.46,
+   "peak_fraction_of_session": 0.04,
+   "trough_before_peak_pct": -35.5,
+   "stop_survival": {
+    "stop20": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop30": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop40": {
+     "wick_min": 15.4,
+     "close_min": 15.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    }
+   }
+  },
+  "direction_touch": {
+   "verdict": "wrong",
+   "first_touch_min": null,
+   "adverse_touch_min": 11.4,
+   "band_pct": 0.201,
+   "rs_per_min_pct": 0.026,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "realizable_stop_pct": 30.0,
+   "risk": "deep",
+   "dd_before_payoff_pct": -35.5,
+   "trough_before_peak_pct": -35.5,
+   "stops_surviving_to_peak": [
+    "stop20",
+    "stop30",
+    "stop40"
+   ]
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 0.83,
+   "vwap_dist_signed_pct": -0.058,
+   "orb15_position": null,
+   "spread_pct_at_entry": 104.3,
+   "nbbo_size_imbalance_at_entry": 0.0,
+   "tod_bucket": "premarket"
+  },
   "verdict": {
    "accuracy": "wrong",
+   "accuracy_30m": "wrong",
    "coincidence": "n/a",
    "timing": "endure",
-   "best_exit_template": "trail_arm30_gb30_stop30"
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "risk": "deep",
+   "erraticness": "unknown",
+   "best_exit_template": "trail_arm30_gb30_stop30",
+   "version": 2
   }
  }
 ]

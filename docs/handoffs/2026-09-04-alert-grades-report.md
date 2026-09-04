@@ -25,7 +25,7 @@ says so explicitly.
 
 ## What already exists (do not rebuild)
 
-pytrade-bot (PR #437 merged 2026-09-03; verdict v2 is PR #450 on `feature/alert-grading-verdict-v2`)
+pytrade-bot (PR #437 and PR #450 merged; the `run.json` manifest keys below and the real-expiry fix are PR #451, `fix/alert-grading-real-expiry`, until it merges)
 produces, every trading morning, a ledger outside both repos:
 
 ```

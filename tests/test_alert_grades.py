@@ -19,10 +19,10 @@ OK_KEY = "2026-09-02|sidea|homer|META|put|09:15:37"
 
 
 @pytest.fixture
-def v2():
-	"""A real verdict-v2 record; the ledger on disk is still v1 until the
-	grader is re-run against pytrade-bot main."""
-	return json.loads((FIXTURE / "record-v2-aapl.json").read_text())
+def v2(day):
+	"""The full-numbers record. The fixture is a trimmed copy of a real
+	regraded day, so every record carries verdict v2."""
+	return record(day, OK_KEY)
 
 
 def _field(embed, name):
@@ -87,14 +87,14 @@ def test_alert_options_are_time_ordered_and_within_limits(day):
 
 def test_alert_card_full_record(day):
 	embed = alert_grades.alert_card(record(day, OK_KEY))
-	names = [f["name"] for f in embed["fields"]]
-	assert names == ["Verdict", "Underlying", "Contract", "Realizable"]
-	assert embed["title"].startswith("❌ META put 577.5")
 	assert embed["color"] == alert_grades.COLOR_WRONG
 	assert embed["footer"]["text"] == OK_KEY
-	contract = dict(zip(names, [f["value"] for f in embed["fields"]]))["Contract"]
-	assert "peak +21.0%" in contract
+	contract = _field(embed, "Contract")
+	assert "baseline 3.1 · entry lag 14.4m" in contract
+	assert "peak +21.0% @ 14.4m" in contract
+	assert "+10% at 14.4m (drawdown first -35.5%)" in contract
 	assert "trail_arm30_gb30_stop30" in contract
+	assert "spread 104.3%" in _field(embed, "Realizable")
 
 
 def test_alert_card_tolerates_status_only_blocks(day):
@@ -107,56 +107,33 @@ def test_alert_card_tolerates_status_only_blocks(day):
 
 
 def test_alert_card_renders_a_verdict_v2_record(v2):
-	"""Real v2 record (pytrade-bot PR #450). v2 adds blocks rather than
-	replacing v1 keys, so both shapes render from the same builder."""
+	"""verdict v2 (pytrade-bot PR #450) adds four blocks and six verdict keys
+	on top of v1; each block gets its own field."""
 	embed = alert_grades.alert_card(v2)
 	values = {f["name"]: f["value"] for f in embed["fields"]}
 	assert [f["name"] for f in embed["fields"]] == [
 		"Verdict", "Direction", "Payoff & risk", "Erraticness",
 		"Underlying", "Contract", "Realizable", "Clues",
 	]
-	# The design's copy is trimmed and carries no `strike`; the headline
-	# drops the field rather than printing a placeholder for it.
-	assert embed["title"] == "✅ AAPL call — 10:31:28 ET"
-	assert "payoff: **paid big**" in values["Verdict"]
-	assert "accuracy 30m: **flat**" in values["Verdict"]
+	assert embed["title"] == "❌ META put 577.5 — 09:15:37 ET"
+	assert v2["verdict"]["version"] == 2
+	assert "payoff: **paid**" in values["Verdict"]
+	assert "payoff realizable: **no**" in values["Verdict"]
+	assert "accuracy 30m: **wrong**" in values["Verdict"]
 	assert "version" not in values["Verdict"]
 
 
 def test_alert_card_direction_field_shows_the_band_behind_the_call(v2):
 	direction = _field(alert_grades.alert_card(v2), "Direction")
-	assert "**right** · first touch 58.5m" in direction
-	assert "band ±0.63% = 1σ × 0.08%/min over 30 bars, 60m horizon" in direction
+	assert "**wrong** · no touch · adverse touch 11.4m" in direction
+	assert "band ±0.2% = 1σ × 0.03%/min over 30 bars, 60m horizon" in direction
 
 
-def test_alert_card_payoff_risk_field(v2):
-	payoff = _field(alert_grades.alert_card(v2), "Payoff & risk")
-	assert "**paid big** · realizable (stop 30%)" in payoff
-	assert "moderate drawdown -26.1% before payoff" in payoff
-	assert "stops surviving to peak: stop40" in payoff
-
-
-def test_alert_card_payoff_risk_names_an_unrealizable_payoff_and_no_stops(v2):
-	rec = dict(v2, payoff_risk=dict(
-		v2["payoff_risk"], payoff_realizable=False, stops_surviving_to_peak=[]
+def test_alert_card_direction_names_a_first_touch(v2):
+	rec = dict(v2, direction_touch=dict(
+		v2["direction_touch"], verdict="right", first_touch_min=58.5, adverse_touch_min=None
 	))
-	payoff = _field(alert_grades.alert_card(rec), "Payoff & risk")
-	assert "not realizable (stop 30%)" in payoff
-	assert "stops surviving to peak: none" in payoff
-
-
-def test_alert_card_erraticness_field_carries_the_sourced_numbers(v2):
-	err = _field(alert_grades.alert_card(v2), "Erraticness")
-	assert "Kaufman ER 0.32 to peak" in err
-	assert "range 8.61%/min" in err
-	assert "jumps 2 (0 before peak)" in err
-	assert "wick-only hits 23 at -30%" in err
-	assert "stop_survival" not in err  # the nested dict is not dumped raw
-
-
-def test_alert_card_erraticness_falls_back_to_status(v2):
-	rec = dict(v2, erraticness={"status": "no_path"})
-	assert _field(alert_grades.alert_card(rec), "Erraticness") == "_no_path_"
+	assert "**right** · first touch 58.5m" in _field(alert_grades.alert_card(rec), "Direction")
 
 
 def test_alert_card_direction_falls_back_to_the_reason(v2):
@@ -166,16 +143,47 @@ def test_alert_card_direction_falls_back_to_the_reason(v2):
 	)
 
 
+def test_alert_card_payoff_risk_field(v2):
+	payoff = _field(alert_grades.alert_card(v2), "Payoff & risk")
+	assert "**paid** · not realizable (stop 30%)" in payoff
+	assert "deep drawdown -35.5% before payoff" in payoff
+	assert "stops surviving to peak: stop20, stop30, stop40" in payoff
+
+
+def test_alert_card_payoff_risk_names_a_realizable_payoff_and_no_stops(v2):
+	rec = dict(v2, payoff_risk=dict(
+		v2["payoff_risk"], payoff_realizable=True, stops_surviving_to_peak=[]
+	))
+	payoff = _field(alert_grades.alert_card(rec), "Payoff & risk")
+	assert "realizable (stop 30%)" in payoff and "not realizable" not in payoff
+	assert "stops surviving to peak: none" in payoff
+
+
+def test_alert_card_erraticness_field_carries_the_sourced_numbers(v2):
+	err = _field(alert_grades.alert_card(v2), "Erraticness")
+	assert "range 9.02%/min" in err
+	assert "jumps 3 (0 before peak)" in err
+	assert "wick-only hits 0 at -30%" in err
+	assert "suddenness 0.34" in err
+	assert "stop_survival" not in err  # the nested dict is not dumped raw
+
+
+def test_alert_card_erraticness_falls_back_to_status(day):
+	assert _field(alert_grades.alert_card(record(day, STUB_KEY)), "Erraticness") == "_no_path_"
+
+
 def test_alert_card_clues_are_shown_and_empty_ones_dropped(v2):
 	clues = _field(alert_grades.alert_card(v2), "Clues")
-	assert "pre alert rel volume: 2.98" in clues
-	assert "tod bucket: morning_10-11_30" in clues
+	assert "pre alert rel volume: 0.83" in clues
+	assert "tod bucket: premarket" in clues
 	rec = dict(v2, clues=dict(v2["clues"], vwap_dist_signed_pct=None))
 	assert "vwap dist" not in _field(alert_grades.alert_card(rec), "Clues")
 
 
-def test_v1_record_has_no_v2_fields(day):
-	names = [f["name"] for f in alert_grades.alert_card(record(day, OK_KEY))["fields"]]
+def test_alert_card_without_the_v2_blocks_renders_only_the_v1_fields(v2):
+	rec = {k: v for k, v in v2.items()
+		   if k not in ("direction_touch", "payoff_risk", "erraticness", "clues")}
+	names = [f["name"] for f in alert_grades.alert_card(rec)["fields"]]
 	assert names == ["Verdict", "Underlying", "Contract", "Realizable"]
 
 
