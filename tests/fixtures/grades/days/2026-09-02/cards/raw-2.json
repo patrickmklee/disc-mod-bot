@@ -1,0 +1,259 @@
+{
+ "kind": "raw_alert",
+ "custom_id": "ag:2026-09-02:alert:2:raw",
+ "index": 2,
+ "key": "2026-09-02|sidea|homer|META|put|09:15:37",
+ "accent_color": 14244134,
+ "title": "Raw numbers · META put 09:15",
+ "blocks": [
+  {
+   "kind": "raw",
+   "title": null,
+   "text": "{\n \"date\": \"2026-09-02\",\n \"lane\": \"sidea\",\n \"source\": \"homer\",\n \"ticker\": \"META\",\n \"direction\": \"put\",\n \"alert_ts\": \"2026-09-02T13:15:37.748000+00:00\",\n \"message_id\": \"\",\n \"strike\": 577.5,\n \"expire\": \"2026-09-02\",\n \"occ\": \"META260902P00577500\",\n \"ref_price\": 576.75,\n \"target\": 565.67,\n \"stop\": 582.29,\n \"mid_at_alert\": null,\n \"key\": \"2026-09-02|sidea|homer|META|put|09:15:37\",\n \"alert_et\": \"09:15:37\",\n \"underlying\": {\n  \"und_px_at_alert\": 576.86,\n  \"und_ref_vs_scanner_pct\": 0.019,\n  \"pre_move_signed_pct\": -0.014,\n  \"und_5m_signed_pct\": 0.016,\n  \"spy_5m_signed_pct\": -0.02,\n  \"und_15m_signed_pct\": -1.236,\n  \"spy_15m_signed_pct\": -0.032,\n  \"und_30m_signed_pct\": -2.316,\n  \"spy_30m_signed_pct\": -0.075,\n  \"und_60m_signed_pct\": -3.717,\n  \"spy_60m_signed_pct\": -0.322,\n  \"und_eod_signed_pct\": -2.798,\n  \"und_mfe_pct\": 0.097,\n  \"und_mae_pct\": -4.077,\n  \"target_hit_min\": null,\n  \"target_already_past_at_alert\": false,\n  \"stop_hit_min\": 14.4,\n  \"status\": \"ok\"\n },\n \"contract\": {\n  \"baseline\": 3.1,\n  \"baseline_src\": \"first_bar_open\",\n  \"entry_lag_min\": 14.4,\n  \"peak_pct\": 21.0,\n  \"peak_min\": 14.4,\n  \"trough_pct\": -99.7,\n  \"trough_min\": 305.4,\n  \"eod_pct\": -99.7,\n  \"t_plus10_min\": 14.4,\n  \"dd_before_plus10_pct\": -35.5,\n  \"t_plus25_min\": null,\n  \"dd_before_plus25_pct\": null,\n  \"t_plus50_min\": null,\n  \"dd_before_plus50_pct\": null,\n  \"what_if\": {\n   \"lock10\": {\n    \"exit_pct\": -35.5,\n    \"minutes\": 14.4\n   },\n   \"lock25\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   },\n   \"lock50\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   },\n   \"trail_arm15_gb25_stop30\": {\n    \"exit_pct\": -35.5,\n    \"minutes\": 14.4\n   },\n   \"trail_arm30_gb30_stop30\": {\n    \"exit_pct\": -30,\n    \"minutes\": 14.4\n   },\n   \"hold_eod\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   }\n  },\n  \"best_exit_template\": \"trail_arm30_gb30_stop30\",\n  \"best_exit_pct\": -30,\n  \"status\": \"ok\"\n },\n \"realizable\": {\n  \"entry_quote_late\": true,\n  \"entry_ask\": 4.7,\n  \"entry_bid\": 2.3,\n  \"entry_lag_s\": 862.7,\n  \"spread_pct_at_entry\": 104.3,\n  \"real_peak_pct\": -20.2,\n  \"real_peak_min\": 14.5,\n  \"real_eod_pct\": -99.8,\n  \"real_t_plus10_min\": null,\n  \"real_t_plus25_min\": null,\n  \"real_t_plus50_min\": null,\n  \"status\": \"ok\"\n },\n \"erraticness\": {\n  \"status\": \"ok\",\n  \"rs_range_vol_per_min_pct\": 9.017,\n  \"kaufman_er_to_peak\": null,\n  \"kaufman_er_session\": 0.402,\n  \"ref_stop_pct\": 30,\n  \"wick_only_hits\": 0,\n  \"wick_only_hit_rate\": 0.0,\n  \"close_hits\": 174,\n  \"jumps_n\": 3,\n  \"jumps_before_peak_n\": 0,\n  \"suddenness_best5_over_peak\": 0.34,\n  \"velocity_pct_per_min_to_peak\": 1.46,\n  \"peak_fraction_of_session\": 0.04,\n  \"trough_before_peak_pct\": -35.5\n },\n \"direction_touch\": {\n  \"verdict\": \"wrong\",\n  \"first_touch_min\": null,\n  \"adverse_touch_min\": 11.4,\n  \"band_pct\": 0.201,\n  \"rs_per_min_pct\": 0.026,\n  \"band_sigmas\": 1.0,\n  \"band_bars\": 30,\n  \"band_src\": \"pre_alert\",\n  \"horizon_min\": 60\n },\n \"payoff_risk\": {\n  \"payoff\": \"paid\",\n  \"payoff_realizable\": false,\n  \"realizable_stop_pct\": 30.0,\n  \"risk\": \"deep\",\n  \"dd_before_payoff_pct\": -35.5,\n  \"trough_before_peak_pct\": -35.5,\n  \"stops_surviving_to_peak\": [\n   \"stop20\",\n   \"stop30\",\n   \"stop40\"\n  ]\n },\n \"clues\": {\n  \"registered\": \"2026-09-03\",\n  \"pre_alert_rel_volume\": 0.83,\n  \"vwa\n\nomitted to fit: erraticness.jumps, erraticness.stop_survival, extra, truncated (full record in grades.json)"
+  }
+ ],
+ "footer": "Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration.",
+ "record": {
+  "date": "2026-09-02",
+  "lane": "sidea",
+  "source": "homer",
+  "ticker": "META",
+  "direction": "put",
+  "alert_ts": "2026-09-02T13:15:37.748000+00:00",
+  "message_id": "",
+  "strike": 577.5,
+  "expire": "2026-09-02",
+  "occ": "META260902P00577500",
+  "ref_price": 576.75,
+  "target": 565.67,
+  "stop": 582.29,
+  "mid_at_alert": null,
+  "extra": {
+   "stage": 2,
+   "stage_label": "DISTRIBUTION CONFIRMED",
+   "action": "ENTER NOW",
+   "otm_strike": 572.5,
+   "conviction_tier": "",
+   "final_score": 44,
+   "score_grade": "B",
+   "signal_id": 1027
+  },
+  "key": "2026-09-02|sidea|homer|META|put|09:15:37",
+  "alert_et": "09:15:37",
+  "underlying": {
+   "und_px_at_alert": 576.86,
+   "und_ref_vs_scanner_pct": 0.019,
+   "pre_move_signed_pct": -0.014,
+   "und_5m_signed_pct": 0.016,
+   "spy_5m_signed_pct": -0.02,
+   "und_15m_signed_pct": -1.236,
+   "spy_15m_signed_pct": -0.032,
+   "und_30m_signed_pct": -2.316,
+   "spy_30m_signed_pct": -0.075,
+   "und_60m_signed_pct": -3.717,
+   "spy_60m_signed_pct": -0.322,
+   "und_eod_signed_pct": -2.798,
+   "und_mfe_pct": 0.097,
+   "und_mae_pct": -4.077,
+   "target_hit_min": null,
+   "target_already_past_at_alert": false,
+   "stop_hit_min": 14.4,
+   "status": "ok"
+  },
+  "contract": {
+   "baseline": 3.1,
+   "baseline_src": "first_bar_open",
+   "entry_lag_min": 14.4,
+   "peak_pct": 21.0,
+   "peak_min": 14.4,
+   "trough_pct": -99.7,
+   "trough_min": 305.4,
+   "eod_pct": -99.7,
+   "t_plus10_min": 14.4,
+   "dd_before_plus10_pct": -35.5,
+   "t_plus25_min": null,
+   "dd_before_plus25_pct": null,
+   "t_plus50_min": null,
+   "dd_before_plus50_pct": null,
+   "what_if": {
+    "lock10": {
+     "exit_pct": -35.5,
+     "minutes": 14.4
+    },
+    "lock25": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    },
+    "lock50": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    },
+    "trail_arm15_gb25_stop30": {
+     "exit_pct": -35.5,
+     "minutes": 14.4
+    },
+    "trail_arm30_gb30_stop30": {
+     "exit_pct": -30,
+     "minutes": 14.4
+    },
+    "hold_eod": {
+     "exit_pct": -99.7,
+     "minutes": 394.4
+    }
+   },
+   "best_exit_template": "trail_arm30_gb30_stop30",
+   "best_exit_pct": -30,
+   "status": "ok"
+  },
+  "realizable": {
+   "entry_quote_late": true,
+   "entry_ask": 4.7,
+   "entry_bid": 2.3,
+   "entry_lag_s": 862.7,
+   "spread_pct_at_entry": 104.3,
+   "real_peak_pct": -20.2,
+   "real_peak_min": 14.5,
+   "real_eod_pct": -99.8,
+   "real_t_plus10_min": null,
+   "real_t_plus25_min": null,
+   "real_t_plus50_min": null,
+   "status": "ok"
+  },
+  "erraticness": {
+   "status": "ok",
+   "rs_range_vol_per_min_pct": 9.017,
+   "kaufman_er_to_peak": null,
+   "kaufman_er_session": 0.402,
+   "ref_stop_pct": 30,
+   "wick_only_hits": 0,
+   "wick_only_hit_rate": 0.0,
+   "close_hits": 174,
+   "jumps_n": 3,
+   "jumps_before_peak_n": 0,
+   "jumps": [
+    {
+     "index": 114,
+     "return_pct": -25.0,
+     "stat": 6.73
+    },
+    {
+     "index": 115,
+     "return_pct": -33.3,
+     "stat": 9.48
+    },
+    {
+     "index": 150,
+     "return_pct": 150.0,
+     "stat": 8.12
+    }
+   ],
+   "suddenness_best5_over_peak": 0.34,
+   "velocity_pct_per_min_to_peak": 1.46,
+   "peak_fraction_of_session": 0.04,
+   "trough_before_peak_pct": -35.5,
+   "stop_survival": {
+    "stop20": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop30": {
+     "wick_min": 14.4,
+     "close_min": 14.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    },
+    "stop40": {
+     "wick_min": 15.4,
+     "close_min": 15.4,
+     "wick_before_peak": false,
+     "close_before_peak": false
+    }
+   }
+  },
+  "direction_touch": {
+   "verdict": "wrong",
+   "first_touch_min": null,
+   "adverse_touch_min": 11.4,
+   "band_pct": 0.201,
+   "rs_per_min_pct": 0.026,
+   "band_sigmas": 1.0,
+   "band_bars": 30,
+   "band_src": "pre_alert",
+   "horizon_min": 60
+  },
+  "payoff_risk": {
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "realizable_stop_pct": 30.0,
+   "risk": "deep",
+   "dd_before_payoff_pct": -35.5,
+   "trough_before_peak_pct": -35.5,
+   "stops_surviving_to_peak": [
+    "stop20",
+    "stop30",
+    "stop40"
+   ]
+  },
+  "clues": {
+   "registered": "2026-09-03",
+   "pre_alert_rel_volume": 0.83,
+   "vwap_dist_signed_pct": -0.058,
+   "orb15_position": null,
+   "spread_pct_at_entry": 104.3,
+   "nbbo_size_imbalance_at_entry": 0.0,
+   "tod_bucket": "premarket"
+  },
+  "verdict": {
+   "accuracy": "wrong",
+   "accuracy_30m": "wrong",
+   "coincidence": "n/a",
+   "timing": "endure",
+   "payoff": "paid",
+   "payoff_realizable": false,
+   "risk": "deep",
+   "erraticness": "unknown",
+   "best_exit_template": "trail_arm30_gb30_stop30",
+   "version": 2
+  }
+ },
+ "buttons": [
+  {
+   "custom_id": "ag:2026-09-02:alert:2",
+   "label": "Back to the card",
+   "style": 2
+  }
+ ],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 14244134,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Raw numbers · META put 09:15"
+    },
+    {
+     "type": 10,
+     "content": "```\n{\n \"date\": \"2026-09-02\",\n \"lane\": \"sidea\",\n \"source\": \"homer\",\n \"ticker\": \"META\",\n \"direction\": \"put\",\n \"alert_ts\": \"2026-09-02T13:15:37.748000+00:00\",\n \"message_id\": \"\",\n \"strike\": 577.5,\n \"expire\": \"2026-09-02\",\n \"occ\": \"META260902P00577500\",\n \"ref_price\": 576.75,\n \"target\": 565.67,\n \"stop\": 582.29,\n \"mid_at_alert\": null,\n \"key\": \"2026-09-02|sidea|homer|META|put|09:15:37\",\n \"alert_et\": \"09:15:37\",\n \"underlying\": {\n  \"und_px_at_alert\": 576.86,\n  \"und_ref_vs_scanner_pct\": 0.019,\n  \"pre_move_signed_pct\": -0.014,\n  \"und_5m_signed_pct\": 0.016,\n  \"spy_5m_signed_pct\": -0.02,\n  \"und_15m_signed_pct\": -1.236,\n  \"spy_15m_signed_pct\": -0.032,\n  \"und_30m_signed_pct\": -2.316,\n  \"spy_30m_signed_pct\": -0.075,\n  \"und_60m_signed_pct\": -3.717,\n  \"spy_60m_signed_pct\": -0.322,\n  \"und_eod_signed_pct\": -2.798,\n  \"und_mfe_pct\": 0.097,\n  \"und_mae_pct\": -4.077,\n  \"target_hit_min\": null,\n  \"target_already_past_at_alert\": false,\n  \"stop_hit_min\": 14.4,\n  \"status\": \"ok\"\n },\n \"contract\": {\n  \"baseline\": 3.1,\n  \"baseline_src\": \"first_bar_open\",\n  \"entry_lag_min\": 14.4,\n  \"peak_pct\": 21.0,\n  \"peak_min\": 14.4,\n  \"trough_pct\": -99.7,\n  \"trough_min\": 305.4,\n  \"eod_pct\": -99.7,\n  \"t_plus10_min\": 14.4,\n  \"dd_before_plus10_pct\": -35.5,\n  \"t_plus25_min\": null,\n  \"dd_before_plus25_pct\": null,\n  \"t_plus50_min\": null,\n  \"dd_before_plus50_pct\": null,\n  \"what_if\": {\n   \"lock10\": {\n    \"exit_pct\": -35.5,\n    \"minutes\": 14.4\n   },\n   \"lock25\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   },\n   \"lock50\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   },\n   \"trail_arm15_gb25_stop30\": {\n    \"exit_pct\": -35.5,\n    \"minutes\": 14.4\n   },\n   \"trail_arm30_gb30_stop30\": {\n    \"exit_pct\": -30,\n    \"minutes\": 14.4\n   },\n   \"hold_eod\": {\n    \"exit_pct\": -99.7,\n    \"minutes\": 394.4\n   }\n  },\n  \"best_exit_template\": \"trail_arm30_gb30_stop30\",\n  \"best_exit_pct\": -30,\n  \"status\": \"ok\"\n },\n \"realizable\": {\n  \"entry_quote_late\": true,\n  \"entry_ask\": 4.7,\n  \"entry_bid\": 2.3,\n  \"entry_lag_s\": 862.7,\n  \"spread_pct_at_entry\": 104.3,\n  \"real_peak_pct\": -20.2,\n  \"real_peak_min\": 14.5,\n  \"real_eod_pct\": -99.8,\n  \"real_t_plus10_min\": null,\n  \"real_t_plus25_min\": null,\n  \"real_t_plus50_min\": null,\n  \"status\": \"ok\"\n },\n \"erraticness\": {\n  \"status\": \"ok\",\n  \"rs_range_vol_per_min_pct\": 9.017,\n  \"kaufman_er_to_peak\": null,\n  \"kaufman_er_session\": 0.402,\n  \"ref_stop_pct\": 30,\n  \"wick_only_hits\": 0,\n  \"wick_only_hit_rate\": 0.0,\n  \"close_hits\": 174,\n  \"jumps_n\": 3,\n  \"jumps_before_peak_n\": 0,\n  \"suddenness_best5_over_peak\": 0.34,\n  \"velocity_pct_per_min_to_peak\": 1.46,\n  \"peak_fraction_of_session\": 0.04,\n  \"trough_before_peak_pct\": -35.5\n },\n \"direction_touch\": {\n  \"verdict\": \"wrong\",\n  \"first_touch_min\": null,\n  \"adverse_touch_min\": 11.4,\n  \"band_pct\": 0.201,\n  \"rs_per_min_pct\": 0.026,\n  \"band_sigmas\": 1.0,\n  \"band_bars\": 30,\n  \"band_src\": \"pre_alert\",\n  \"horizon_min\": 60\n },\n \"payoff_risk\": {\n  \"payoff\": \"paid\",\n  \"payoff_realizable\": false,\n  \"realizable_stop_pct\": 30.0,\n  \"risk\": \"deep\",\n  \"dd_before_payoff_pct\": -35.5,\n  \"trough_before_peak_pct\": -35.5,\n  \"stops_surviving_to_peak\": [\n   \"stop20\",\n   \"stop30\",\n   \"stop40\"\n  ]\n },\n \"clues\": {\n... trimmed to fit; full table in ledger.csv\n```"
+    },
+    {
+     "type": 10,
+     "content": "-# Payoff tiers 10 / 50, the 30% realizable stop, risk cuts −10 / −30 and the ER cuts 0.2 / 0.5 are provisional thresholds pending ledger calibration."
+    },
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 2,
+       "style": 2,
+       "label": "Back to the card",
+       "custom_id": "ag:2026-09-02:alert:2"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

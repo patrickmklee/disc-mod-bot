@@ -1,0 +1,36 @@
+{
+ "kind": "sources",
+ "custom_id": "ag:2026-09-02:sources",
+ "accent_color": 4145479,
+ "title": "Sources · Sep 2",
+ "subtitle": "Sorted by alerts fired. paid = contract printed +10% · realizable = payoff survived the 30% stop · ER = median efficiency ratio to peak · provisional thresholds.",
+ "sources": [
+  {
+   "source": "homer",
+   "lane": "sidea",
+   "lane_name": "Side A",
+   "lane_color": 14244134,
+   "n": 2,
+   "glyphs": [
+    "✓",
+    "✕"
+   ],
+   "line1": "1 right · 1 wrong · 0 flat · 50% right",
+   "line2": "paid 1/1 · realizable 0/1 · +10% median 14m · drawdown first −36% · best trail30/30"
+  }
+ ],
+ "footer": null,
+ "buttons": [],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 4145479,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Sources · Sep 2\n-# Sorted by alerts fired. paid = contract printed +10% · realizable = payoff survived the 30% stop · ER = median efficiency ratio to peak · provisional thresholds.\n**homer** `Side A` n=2  ✓✕\n1 right · 1 wrong · 0 flat · 50% right\n-# paid 1/1 · realizable 0/1 · +10% median 14m · drawdown first −36% · best trail30/30"
+    }
+   ]
+  }
+ ]
+}

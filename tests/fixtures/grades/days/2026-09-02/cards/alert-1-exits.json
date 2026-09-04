@@ -1,0 +1,44 @@
+{
+ "kind": "alert_exits",
+ "custom_id": "ag:2026-09-02:alert:1:exits",
+ "index": 1,
+ "key": "2026-09-02|sidea|homer|AVGO|put|08:35:16",
+ "accent_color": 14244134,
+ "title": "Exit templates · replayed on this contract",
+ "blocks": [],
+ "footer": "No exit templates for this alert: contract no option bars.",
+ "buttons": [
+  {
+   "custom_id": "ag:2026-09-02:alert:1",
+   "label": "Hide ▾",
+   "style": 2
+  }
+ ],
+ "components": [
+  {
+   "type": 17,
+   "accent_color": 14244134,
+   "components": [
+    {
+     "type": 10,
+     "content": "## Exit templates · replayed on this contract"
+    },
+    {
+     "type": 10,
+     "content": "-# No exit templates for this alert: contract no option bars."
+    },
+    {
+     "type": 1,
+     "components": [
+      {
+       "type": 2,
+       "style": 2,
+       "label": "Hide ▾",
+       "custom_id": "ag:2026-09-02:alert:1"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

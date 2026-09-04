@@ -153,6 +153,12 @@ card; it maps a click to a file and replies with it. So step 2's
 `alert_card` / `raw_block` builders are NOT built here; the pure module only
 lists days, loads files, and resolves a `custom_id` or select value to a path.
 
+Phase 2 landed 2026-09-04 (steps 6-8 below). It depends on pytrade-bot
+PRs #454 (cards), #456 (images) and #457 (`post.json`), which were still
+open and stacked when it was written: until they merge, a day directory has
+no `cards/` and no `post.json`, and the report posts exactly as it did in
+phase 1 -- without the interaction layer, by design rather than by failure.
+
 6. **Views** `src/discord_mod_bot/views.py`: a `discord.ui.View` whose select
    and button callbacks resolve the interaction's `custom_id` / value to a
    pre-rendered file under `days/<date>/cards/` (naming and the `custom_id`

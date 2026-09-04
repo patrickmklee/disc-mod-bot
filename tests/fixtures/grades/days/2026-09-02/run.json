@@ -3,5 +3,59 @@
  "n_alerts": 2,
  "partial_intraday": false,
  "verdict_version": 2,
- "png": "tape.png"
+ "png": "tape.png",
+ "alert_pngs": {
+  "1": "alert-1.png",
+  "2": "alert-2.png"
+ },
+ "cards": {
+  "alert-1": "cards/alert-1.json",
+  "alert-1-exits": "cards/alert-1-exits.json",
+  "raw-1": "cards/raw-1.json",
+  "alert-2": "cards/alert-2.json",
+  "alert-2-exits": "cards/alert-2-exits.json",
+  "raw-2": "cards/raw-2.json",
+  "sources": "cards/sources.json",
+  "exits-explainer": "cards/exits-explainer.json",
+  "raw": "cards/raw.json",
+  "ledger_csv": "cards/ledger.csv"
+ },
+ "custom_ids": {
+  "ag:2026-09-02:alert:1": "cards/alert-1.json",
+  "ag:2026-09-02:alert:1:exits": "cards/alert-1-exits.json",
+  "ag:2026-09-02:alert:1:raw": "cards/raw-1.json",
+  "ag:2026-09-02:alert:1:next": "cards/alert-2.json",
+  "ag:2026-09-02:alert:2": "cards/alert-2.json",
+  "ag:2026-09-02:alert:2:exits": "cards/alert-2-exits.json",
+  "ag:2026-09-02:alert:2:raw": "cards/raw-2.json",
+  "ag:2026-09-02:alert:2:prev": "cards/alert-1.json",
+  "ag:2026-09-02:sources": "cards/sources.json",
+  "ag:2026-09-02:exits": "cards/exits-explainer.json",
+  "ag:2026-09-02:raw": "cards/raw.json"
+ },
+ "custom_id_scheme": {
+  "alert": "ag:<date>:alert:<n>",
+  "alert_exits": "ag:<date>:alert:<n>:exits",
+  "alert_prev": "ag:<date>:alert:<n>:prev",
+  "alert_next": "ag:<date>:alert:<n>:next",
+  "alert_raw": "ag:<date>:alert:<n>:raw",
+  "sources": "ag:<date>:sources",
+  "exits": "ag:<date>:exits",
+  "raw": "ag:<date>:raw"
+ },
+ "n_cards": 10,
+ "select_options": [
+  {
+   "label": "AVGO put 08:35 \u00b7 homer",
+   "description": "\u2713 Right in 17m \u00b7 not graded (no option bars)",
+   "value": "ag:2026-09-02:alert:1",
+   "accuracy": "right"
+  },
+  {
+   "label": "META put 09:15 \u00b7 homer",
+   "description": "\u2715 Wrong \u00b7 no touch in 60m \u00b7 \u25b2 paid (not realizable) \u00b7 \u2586 deep dd \u00b7 best trail30/30",
+   "value": "ag:2026-09-02:alert:2",
+   "accuracy": "wrong"
+  }
+ ]
 }

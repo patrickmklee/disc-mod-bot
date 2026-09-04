@@ -105,9 +105,22 @@ replies in-channel. Leave them in place unless cleaning up deliberately.
 ## In-flight work
 
 `docs/handoffs/2026-09-04-alert-grades-report.md` is the plan for the
-alert-grading report. Phase 1 (config, loader, sender, poster, `/grade`) is
-done; phase 2 (`views.py` — a click router whose select and buttons resolve a
-`custom_id` to a card pytrade-bot pre-rendered under `days/<date>/cards/`)
-and phase 3 (Components V2, blocked on the design) are not.
+alert-grading report. Phases 1 (config, loader, sender, poster, `/grade`)
+and 2 (`views.py`, the click router) are done; phase 3 — switching the day
+post itself to Components V2 — is not.
+
+**The click router.** `views.py` sends component arrays pytrade-bot wrote and
+never builds one. `RawView` overrides `to_components` / `has_components_v2`,
+which is the whole of what discord.py serializes, so a pre-rendered array
+goes out through the library's normal send paths. The day post's select and
+buttons are lifted out of `post.json`; each click's card comes from
+`run.json`'s `custom_ids` (a dict lookup in `alert_grades.resolve_click`, not
+a parse of the `ag:<date>:...` grammar, so a scheme change upstream is a
+fixture change here). Clicks route through an `on_interaction` listener
+rather than `discord.ui` children — the components arrive as JSON, so there
+are no children to dispatch to, and the day post keeps working across a
+restart. `:alert:<n>:exits|prev|next` edit the open ephemeral in place;
+everything else opens a new one.
+
 `docs/slash-migration.md` is the completed hybrid-command migration, kept
 for context.

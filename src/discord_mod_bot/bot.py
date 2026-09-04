@@ -254,6 +254,13 @@ class DiscordModBot:
         intents.message_content = True
         self.bot = commands.Bot(command_prefix=config.command_prefix, intents=intents)
         self.bot.setup_hook = self._setup_hook
+        # Imported here, not at module scope: discord.py is loaded lazily
+        # above so a missing install fails with an install hint.
+        from discord_mod_bot import views
+
+        self.views = views
+        self.clicks = views.ClickRouter(config.grades_dir, LOG)
+        self.bot.add_listener(self.clicks.on_interaction, "on_interaction")
         self._register_events()
         self._register_commands()
 
@@ -586,7 +593,12 @@ class DiscordModBot:
         """
         # day.username is webhook-only -- a bot cannot set a per-message
         # username -- so the grader's "(trial)" marker is dropped here.
-        for group in alert_grades.split_for_post(day.embeds):
+        groups = alert_grades.split_for_post(day.embeds)
+        # The select and buttons go under the last message so they sit at the
+        # bottom of the report; a day the grader wrote no post.json for has
+        # none, and the report still posts without an interaction layer.
+        view = self.views.day_view(day)
+        for index, group in enumerate(groups):
             attach = day.tape_path is not None and any(e.get("image") for e in group)
             files = (
                 [self.discord.File(day.tape_path, filename=day.png_name)]
@@ -594,7 +606,8 @@ class DiscordModBot:
                 else []
             )
             embeds = [self._discord_embed(e, with_image=attach) for e in group]
-            await destination.send(embeds=embeds, files=files)
+            extra = {"view": view} if view and index == len(groups) - 1 else {}
+            await destination.send(embeds=embeds, files=files, **extra)
 
     def _discord_embed(self, payload: dict[str, Any], *, with_image: bool = False):
         embed = self.discord.Embed(
