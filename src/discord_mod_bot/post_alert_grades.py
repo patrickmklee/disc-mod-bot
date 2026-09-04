@@ -83,14 +83,18 @@ def main(argv: list[str] | None = None) -> int:
 		return 1
 
 	groups = alert_grades.split_for_post(day.embeds)
+	# A day the grader wrote before it rendered post.json posts without the
+	# select and buttons; say so here rather than let it pass as a full post.
+	rows = alert_grades.day_action_rows(day)
 	LOG.info(
-		"%s: %d alerts, %d embeds in %d message(s), %d chars, tape %s -> %s channel %d",
+		"%s: %d alerts, %d embeds in %d message(s), %d chars, tape %s, %s -> %s channel %d",
 		day.date,
 		len(day.records),
 		len(day.embeds),
 		len(groups),
 		alert_grades.payload_chars(day.embeds),
 		day.tape_path or "none",
+		f"{len(rows)} action row(s)" if rows else "no click layer",
 		config.grades_env,
 		channel_id,
 	)
