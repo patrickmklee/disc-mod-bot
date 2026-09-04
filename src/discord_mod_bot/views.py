@@ -11,6 +11,7 @@ This is the only module besides `bot.py` that imports discord.py.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 
 import discord
@@ -18,6 +19,11 @@ import discord
 from discord_mod_bot import alert_grades
 
 CLICK_PREFIX = "ag:"
+# A click's date becomes a directory name, so it is matched rather than
+# trusted. Discord only sends interactions for components this bot posted, so
+# a forged id is not reachable -- but the shape is free to check and keeps the
+# path join honest if the scheme ever grows a wilder segment.
+CLICK_ID = re.compile(r"^ag:(\d{4}-\d{2}-\d{2}):.+$")
 
 
 class RawView(discord.ui.LayoutView):
@@ -64,8 +70,8 @@ def card_files(card: alert_grades.Card) -> list[discord.File]:
 
 def click_date(custom_id: str) -> Optional[str]:
 	"""The ledger day a click belongs to, read off the grader's id scheme."""
-	parts = custom_id.split(":")
-	return parts[1] if len(parts) > 2 and parts[0] == CLICK_PREFIX[:-1] else None
+	match = CLICK_ID.match(custom_id)
+	return match.group(1) if match else None
 
 
 class ClickRouter:
@@ -75,6 +81,10 @@ class ClickRouter:
 	components are pytrade-bot's: they arrive as JSON, never as items this bot
 	constructed, and they outlive any view object -- the day post keeps working
 	across a restart.
+
+	Unlike a command this does not run `_gate`: Discord sends a component
+	interaction only for a message the bot itself posted, so a click can only
+	come from a channel the channel gate already let the report into.
 	"""
 
 	def __init__(self, grades_dir: str, logger):

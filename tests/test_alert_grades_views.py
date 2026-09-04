@@ -4,9 +4,12 @@ These assert against discord.py's own outgoing-payload builder rather than a
 mock, so a change in how the library serializes a view fails here.
 """
 
+import json
 from pathlib import Path
 
+from discord import InteractionResponseType
 from discord.http import handle_message_parameters
+from discord.webhook.async_ import interaction_message_response_params
 
 from discord_mod_bot import alert_grades, views
 
@@ -56,3 +59,37 @@ def test_card_files_upload_what_the_cards_attachment_urls_reference():
 def test_click_date_is_read_off_the_custom_id():
 	assert views.click_date(f"ag:{DATE}:alert:1:next") == DATE
 	assert views.click_date("some-other-button") is None
+
+
+# The in-place edits ("All 6 exits", prev / next) go out through a different
+# builder than a fresh reply, so the array and the flag are asserted again on
+# that path rather than assumed to carry over.
+
+
+def _edit_payload(view, files):
+	"""The JSON discord.py sends for an edit -- inside the multipart body,
+	since the new card's image is uploaded with it."""
+	params = interaction_message_response_params(
+		type=InteractionResponseType.message_update.value, view=view, attachments=files
+	)
+	part = next(p for p in params.multipart if p["name"] == "payload_json")
+	return json.loads(part["value"])
+
+
+def test_an_in_place_edit_replaces_the_card_with_the_next_ones_components():
+	card = alert_grades.resolve_click(_day(), f"ag:{DATE}:alert:1:next")
+	payload = _edit_payload(views.card_view(card), views.card_files(card))
+	assert payload["data"]["components"] == card.components
+	assert payload["data"]["flags"] & COMPONENTS_V2
+
+
+def test_an_in_place_edit_swaps_the_attachment_set_to_the_new_alerts_png():
+	card = alert_grades.resolve_click(_day(), f"ag:{DATE}:alert:1:next")
+	payload = _edit_payload(views.card_view(card), views.card_files(card))
+	assert [a["filename"] for a in payload["data"]["attachments"]] == ["alert-2.png"]
+
+
+def test_click_date_refuses_anything_that_is_not_a_ledger_date():
+	"""A day is a directory name, so only the grader's date shape is one."""
+	assert views.click_date("ag:../../../etc:alert:1") is None
+	assert views.click_date("ag::alert:1") is None
