@@ -7,8 +7,10 @@ MOD_BOT_ALERT_GRADES_ENV, logs out. Called by pytrade-bot's
 `scripts/grade_alerts_daily.sh` after the grader runs -- there is no
 in-process scheduler on purpose.
 
-Exits non-zero if the day directory, the tape image, or the destination
-channel id is missing.
+Exits non-zero if the day directory, its `run.json`, the image that manifest
+names, or the destination channel id is missing. A day the grader marked
+`partial_intraday` is skipped with a zero exit -- it is not final, and cron
+runs again after the close.
 """
 
 from __future__ import annotations
@@ -41,20 +43,34 @@ def main(argv: list[str] | None = None) -> int:
 	)
 	config = ModBotConfig.from_env()
 
-	days = alert_grades.list_days(config.grades_dir)
-	if not days:
-		print(f"No ledger days under {config.grades_dir}", file=sys.stderr)
+	target = args.date or alert_grades.newest_final_day(config.grades_dir)
+	if not target:
+		print(f"No final ledger day under {config.grades_dir}", file=sys.stderr)
 		return 1
 	try:
-		day = alert_grades.load_day(config.grades_dir, args.date or days[0])
+		day = alert_grades.load_day(config.grades_dir, target)
 	except alert_grades.DayNotFound as exc:
 		print(
 			f"No grades for {exc.date}. Available: {', '.join(exc.available)}",
 			file=sys.stderr,
 		)
 		return 1
-	if day.tape_path is None:
-		print(f"Missing {alert_grades.TAPE_FILENAME} in {day.directory}", file=sys.stderr)
+	if not day.manifest:
+		print(
+			f"Missing {alert_grades.MANIFEST_FILENAME} in {day.directory}",
+			file=sys.stderr,
+		)
+		return 1
+	# Not a failure: the grader ran before the close, and cron calls this
+	# again for the final pass.
+	if day.partial_intraday:
+		LOG.info("%s is partial_intraday, not final -- nothing posted", day.date)
+		return 0
+	if day.png_name and day.tape_path is None:
+		print(
+			f"Manifest names {day.png_name} but it is not in {day.directory}",
+			file=sys.stderr,
+		)
 		return 1
 
 	channel_id = config.grades_channel_id
@@ -74,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
 		len(day.embeds),
 		len(groups),
 		alert_grades.payload_chars(day.embeds),
-		day.tape_path,
+		day.tape_path or "none",
 		config.grades_env,
 		channel_id,
 	)

@@ -2,7 +2,9 @@
 
 The fixture under tests/fixtures/grades is a trimmed copy of a real
 ~/pytrade-signal-grades day: two records, one with full contract/realizable
-numbers and one where both blocks are status-only stubs.
+numbers and one where both blocks are status-only stubs. This module reads
+the ledger and never renders it, so the tests assert what was loaded and how
+it is split for posting -- never how a card looks.
 """
 
 import json
@@ -14,19 +16,6 @@ from discord_mod_bot import alert_grades
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "grades"
-STUB_KEY = "2026-09-02|sidea|homer|AVGO|put|08:35:16"
-OK_KEY = "2026-09-02|sidea|homer|META|put|09:15:37"
-
-
-@pytest.fixture
-def v2(day):
-	"""The full-numbers record. The fixture is a trimmed copy of a real
-	regraded day, so every record carries verdict v2."""
-	return record(day, OK_KEY)
-
-
-def _field(embed, name):
-	return next(f["value"] for f in embed["fields"] if f["name"] == name)
 
 
 @pytest.fixture
@@ -34,17 +23,18 @@ def day():
 	return alert_grades.load_day(FIXTURE, "2026-09-02")
 
 
-def record(day, key):
-	found = alert_grades.find_record(day.records, key)
-	assert found is not None
-	return found
+def _day_dir(root, date, manifest=None, grades="[]"):
+	d = root / "days" / date
+	d.mkdir(parents=True)
+	(d / "grades.json").write_text(grades)
+	if manifest is not None:
+		(d / alert_grades.MANIFEST_FILENAME).write_text(json.dumps(manifest))
+	return d
 
 
 def test_list_days_newest_first(tmp_path):
 	for date in ("2026-09-01", "2026-09-03", "2026-09-02"):
-		d = tmp_path / "days" / date
-		d.mkdir(parents=True)
-		(d / "grades.json").write_text("[]")
+		_day_dir(tmp_path, date)
 	(tmp_path / "days" / "not-a-day").mkdir()
 	assert alert_grades.list_days(tmp_path) == ["2026-09-03", "2026-09-02", "2026-09-01"]
 
@@ -68,161 +58,67 @@ def test_load_day_unknown_date_lists_available():
 	assert exc.value.available == ["2026-09-02"]
 
 
-def test_load_day_without_tape(tmp_path):
-	d = tmp_path / "days" / "2026-09-02"
-	d.mkdir(parents=True)
-	(d / "grades.json").write_text("[]")
-	assert alert_grades.load_day(tmp_path, "2026-09-02").tape_path is None
+# ----------------------------------------------------------------------
+# The run.json manifest
+# ----------------------------------------------------------------------
 
 
-def test_alert_options_are_time_ordered_and_within_limits(day):
-	options = alert_grades.alert_options(day.records)
-	assert [o["value"] for o in options] == [STUB_KEY, OK_KEY]
-	for option in options:
-		assert 0 < len(option["label"]) <= 100
-		assert len(option["description"]) <= 100
-		assert len(option["value"]) <= 100
-	assert "AVGO" in options[0]["label"]
+def test_load_day_reads_the_manifest(day):
+	assert day.manifest["verdict_version"] == 2
+	assert day.partial_intraday is False
+	assert day.png_name == "tape.png"
 
 
-def test_alert_card_full_record(day):
-	embed = alert_grades.alert_card(record(day, OK_KEY))
-	assert embed["color"] == alert_grades.COLOR_WRONG
-	assert embed["footer"]["text"] == OK_KEY
-	contract = _field(embed, "Contract")
-	assert "baseline 3.1 · entry lag 14.4m" in contract
-	assert "peak +21.0% @ 14.4m" in contract
-	assert "+10% at 14.4m (drawdown first -35.5%)" in contract
-	assert "trail_arm30_gb30_stop30" in contract
-	assert "spread 104.3%" in _field(embed, "Realizable")
+def test_a_day_without_a_manifest_names_no_png(tmp_path):
+	"""An absent run.json is not a chartless day -- it is a day the grader
+	never finished. The poster refuses it; the loader just reports nothing."""
+	_day_dir(tmp_path, "2026-09-02")
+	loaded = alert_grades.load_day(tmp_path, "2026-09-02")
+	assert loaded.manifest == {}
+	assert loaded.png_name is None
+	assert loaded.tape_path is None
 
 
-def test_alert_card_tolerates_status_only_blocks(day):
-	embed = alert_grades.alert_card(record(day, STUB_KEY))
-	values = {f["name"]: f["value"] for f in embed["fields"]}
-	assert values["Contract"] == "_no_option_bars_"
-	assert values["Realizable"] == "_no_quotes_"
-	assert "accuracy: **right**" in values["Verdict"]
-	assert embed["color"] == alert_grades.COLOR_RIGHT
+def test_a_null_png_is_a_day_with_no_chart(tmp_path):
+	"""Zero contract bars is a legitimate, if poor, day: no image, still posted."""
+	_day_dir(tmp_path, "2026-09-02", {"partial_intraday": False, "png": None})
+	loaded = alert_grades.load_day(tmp_path, "2026-09-02")
+	assert loaded.png_name is None
+	assert loaded.tape_path is None
+	assert loaded.partial_intraday is False
 
 
-def test_alert_card_renders_a_verdict_v2_record(v2):
-	"""verdict v2 (pytrade-bot PR #450) adds four blocks and six verdict keys
-	on top of v1; each block gets its own field."""
-	embed = alert_grades.alert_card(v2)
-	values = {f["name"]: f["value"] for f in embed["fields"]}
-	assert [f["name"] for f in embed["fields"]] == [
-		"Verdict", "Direction", "Payoff & risk", "Erraticness",
-		"Underlying", "Contract", "Realizable", "Clues",
-	]
-	assert embed["title"] == "❌ META put 577.5 — 09:15:37 ET"
-	assert v2["verdict"]["version"] == 2
-	assert "payoff: **paid**" in values["Verdict"]
-	assert "payoff realizable: **no**" in values["Verdict"]
-	assert "accuracy 30m: **wrong**" in values["Verdict"]
-	assert "version" not in values["Verdict"]
+def test_a_named_png_that_is_absent_leaves_no_tape_path(tmp_path):
+	_day_dir(tmp_path, "2026-09-02", {"png": "tape.png"})
+	loaded = alert_grades.load_day(tmp_path, "2026-09-02")
+	assert loaded.png_name == "tape.png"
+	assert loaded.tape_path is None
 
 
-def test_alert_card_direction_field_shows_the_band_behind_the_call(v2):
-	direction = _field(alert_grades.alert_card(v2), "Direction")
-	assert "**wrong** · no touch · adverse touch 11.4m" in direction
-	assert "band ±0.2% = 1σ × 0.03%/min over 30 bars, 60m horizon" in direction
+def test_partial_intraday_is_read_from_the_manifest(tmp_path):
+	_day_dir(tmp_path, "2026-09-02", {"partial_intraday": True, "png": None})
+	assert alert_grades.load_day(tmp_path, "2026-09-02").partial_intraday is True
 
 
-def test_alert_card_direction_names_a_first_touch(v2):
-	rec = dict(v2, direction_touch=dict(
-		v2["direction_touch"], verdict="right", first_touch_min=58.5, adverse_touch_min=None
-	))
-	assert "**right** · first touch 58.5m" in _field(alert_grades.alert_card(rec), "Direction")
+def test_newest_final_day_skips_a_still_open_session(tmp_path):
+	_day_dir(tmp_path, "2026-09-02", {"partial_intraday": False})
+	_day_dir(tmp_path, "2026-09-03", {"partial_intraday": True})
+	assert alert_grades.list_days(tmp_path)[0] == "2026-09-03"
+	assert alert_grades.newest_final_day(tmp_path) == "2026-09-02"
 
 
-def test_alert_card_direction_falls_back_to_the_reason(v2):
-	rec = dict(v2, direction_touch={"verdict": "unknown", "reason": "no_underlying_bars"})
-	assert _field(alert_grades.alert_card(rec), "Direction") == (
-		"**unknown** — _no_underlying_bars_"
-	)
+def test_newest_final_day_when_every_day_is_partial(tmp_path):
+	_day_dir(tmp_path, "2026-09-03", {"partial_intraday": True})
+	assert alert_grades.newest_final_day(tmp_path) is None
 
 
-def test_alert_card_payoff_risk_field(v2):
-	payoff = _field(alert_grades.alert_card(v2), "Payoff & risk")
-	assert "**paid** · not realizable (stop 30%)" in payoff
-	assert "deep drawdown -35.5% before payoff" in payoff
-	assert "stops surviving to peak: stop20, stop30, stop40" in payoff
+def test_newest_final_day_on_the_fixture():
+	assert alert_grades.newest_final_day(FIXTURE) == "2026-09-02"
 
 
-def test_alert_card_payoff_risk_names_a_realizable_payoff_and_no_stops(v2):
-	rec = dict(v2, payoff_risk=dict(
-		v2["payoff_risk"], payoff_realizable=True, stops_surviving_to_peak=[]
-	))
-	payoff = _field(alert_grades.alert_card(rec), "Payoff & risk")
-	assert "realizable (stop 30%)" in payoff and "not realizable" not in payoff
-	assert "stops surviving to peak: none" in payoff
-
-
-def test_alert_card_erraticness_field_carries_the_sourced_numbers(v2):
-	err = _field(alert_grades.alert_card(v2), "Erraticness")
-	assert "range 9.02%/min" in err
-	assert "jumps 3 (0 before peak)" in err
-	assert "wick-only hits 0 at -30%" in err
-	assert "suddenness 0.34" in err
-	assert "stop_survival" not in err  # the nested dict is not dumped raw
-
-
-def test_alert_card_erraticness_falls_back_to_status(day):
-	assert _field(alert_grades.alert_card(record(day, STUB_KEY)), "Erraticness") == "_no_path_"
-
-
-def test_alert_card_clues_are_shown_and_empty_ones_dropped(v2):
-	clues = _field(alert_grades.alert_card(v2), "Clues")
-	assert "pre alert rel volume: 0.83" in clues
-	assert "tod bucket: premarket" in clues
-	rec = dict(v2, clues=dict(v2["clues"], vwap_dist_signed_pct=None))
-	assert "vwap dist" not in _field(alert_grades.alert_card(rec), "Clues")
-
-
-def test_alert_card_without_the_v2_blocks_renders_only_the_v1_fields(v2):
-	rec = {k: v for k, v in v2.items()
-		   if k not in ("direction_touch", "payoff_risk", "erraticness", "clues")}
-	names = [f["name"] for f in alert_grades.alert_card(rec)["fields"]]
-	assert names == ["Verdict", "Underlying", "Contract", "Realizable"]
-
-
-def test_alert_card_fields_fit_discord_limits(day):
-	for rec in day.records:
-		embed = alert_grades.alert_card(rec)
-		assert len(embed["title"]) <= 256
-		assert len(embed["fields"]) <= 25
-		for f in embed["fields"]:
-			assert len(f["value"]) <= 1024
-
-
-def test_raw_blocks_keep_every_field_of_a_real_record(day):
-	"""A full record does not fit one message once what_if is included, so
-	the fields have to survive across blocks rather than be truncated."""
-	rec = record(day, OK_KEY)
-	blocks = alert_grades.raw_blocks(rec)
-	assert len(blocks) > 1
-	joined = "".join(blocks)
-	for key in rec["contract"]["what_if"]:
-		assert key in joined
-	assert "entry_lag_min" in joined and "und_mfe_pct" in joined
-
-
-def test_raw_blocks_fit_the_message_limit(day):
-	for rec in day.records:
-		for block in alert_grades.raw_blocks(rec):
-			assert block.startswith("```json\n") and block.endswith("\n```")
-			assert len(block) <= alert_grades.MESSAGE_CHAR_LIMIT
-
-
-def test_raw_blocks_truncate_a_single_oversized_line():
-	"""Splitting happens on line boundaries, so one absurdly long value is
-	still cut -- visibly, with an ellipsis, rather than silently."""
-	blocks = alert_grades.raw_blocks({"blob": "x" * 5000})
-	assert len(blocks) == 3
-	assert "..." in blocks[1]
-	for block in blocks:
-		assert len(block) <= alert_grades.MESSAGE_CHAR_LIMIT
+# ----------------------------------------------------------------------
+# Message budget
+# ----------------------------------------------------------------------
 
 
 def test_payload_chars_counts_titles_descriptions_fields_and_footers():
@@ -260,8 +156,12 @@ def test_split_for_post_emits_an_oversized_embed_alone():
 
 
 def test_real_day_json_shapes_match_the_fixture():
-	"""Guards the repo contract: discord.json is post-shaped and the summary
-	embed references the tape as an attachment."""
-	payload = json.loads((FIXTURE / "days/2026-09-02/discord.json").read_text())
+	"""Guards the repo contract: discord.json is post-shaped, the summary
+	embed references the tape as an attachment, and run.json carries the two
+	keys the poster branches on."""
+	base = FIXTURE / "days/2026-09-02"
+	payload = json.loads((base / "discord.json").read_text())
 	assert set(payload) == {"username", "embeds"}
 	assert payload["embeds"][0]["image"]["url"].startswith("attachment://")
+	manifest = json.loads((base / "run.json").read_text())
+	assert "png" in manifest and "partial_intraday" in manifest

@@ -536,20 +536,30 @@ class DiscordModBot:
 
     async def _cmd_grade(self, ctx, *, date: Optional[str] = None) -> None:
         """Reply in-channel with a day's alert-grading report."""
-        days = await asyncio.to_thread(alert_grades.list_days, self.config.grades_dir)
-        if not days:
+        target = date or await asyncio.to_thread(
+            alert_grades.newest_final_day, self.config.grades_dir
+        )
+        if not target:
             await ctx.send(
-                f"No ledger days under `{self.config.grades_dir}`.", ephemeral=True
+                f"No final ledger day under `{self.config.grades_dir}`.",
+                ephemeral=True,
             )
             return
         try:
             day = await asyncio.to_thread(
-                alert_grades.load_day, self.config.grades_dir, date or days[0]
+                alert_grades.load_day, self.config.grades_dir, target
             )
         except alert_grades.DayNotFound as exc:
             await ctx.send(
                 f"No grades for `{exc.date}`. Available: "
                 + ", ".join(f"`{d}`" for d in exc.available[:10]),
+                ephemeral=True,
+            )
+            return
+        if day.partial_intraday:
+            await ctx.send(
+                f"`{day.date}` was graded while its session was still open;"
+                " it is not final yet.",
                 ephemeral=True,
             )
             return
@@ -560,13 +570,18 @@ class DiscordModBot:
     async def send_day_report(self, destination, day: alert_grades.DayReport) -> None:
         """Send a day's embeds, splitting on the 6000-character budget and
         attaching the tape to whichever message carries the image embed.
+
+        A day whose manifest names no `png` is posted without the image --
+        zero contract bars is a legitimate, if poor, day -- and the embeds'
+        `attachment://` image is dropped with it so Discord is never handed a
+        reference to a file that was not uploaded.
         """
         # day.username is webhook-only -- a bot cannot set a per-message
         # username -- so the grader's "(trial)" marker is dropped here.
         for group in alert_grades.split_for_post(day.embeds):
             attach = day.tape_path is not None and any(e.get("image") for e in group)
             files = (
-                [self.discord.File(day.tape_path, filename=alert_grades.TAPE_FILENAME)]
+                [self.discord.File(day.tape_path, filename=day.png_name)]
                 if attach
                 else []
             )

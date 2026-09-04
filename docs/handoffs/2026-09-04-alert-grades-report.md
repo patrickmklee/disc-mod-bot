@@ -1,7 +1,9 @@
 # Handoff: alert-grades report through the mod bot (Hasselhoff)
 
 Written 2026-09-04 for the session that implements this in `discord_mod_bot`.
-Untracked on purpose; commit it with the work. Read `CLAUDE.md` and
+Untracked on purpose; commit it with the work. Tracking issue: this repo #2
+(phases, acceptance, decide-by dates). Rendering side: pytrade-bot #452;
+grading follow-ups and the live-mode data decision: pytrade-bot #453. Read `CLAUDE.md` and
 `docs/slash-migration.md` in this repo first; they define the conventions
 (hybrid commands, the `_gate` pattern, pure modules with no discord.py, `uv`).
 
@@ -142,13 +144,26 @@ Phase 1 delivers a posted report today from the files that already exist.
 
 Phase 2 adds the interaction layer once phase 1 is posting.
 
-6. **Views** `src/discord_mod_bot/views.py`: a `discord.ui.View` with the
-   select menu and the three buttons; callbacks reply ephemerally using the
-   pure builders from step 2; previous / next and "All 6 exits" edit the
-   ephemeral message in place. Attach the view to the phase-1 post and to the
-   `/grade` reply. Interactive components need the message to be
-   application-owned, which a bot post is.
-7. **Raw numbers** attaches a per-day CSV generated from `grades.json`.
+Ownership rule (operator, 2026-09-04): **pytrade-bot owns everything that is
+rendered; this bot owns everything that is delivered or clicked.** The select
+menu options, button labels, the `custom_id` scheme, every ephemeral card, the
+sources card, the exits explainer, the raw block + CSV, and every image are
+files pytrade-bot writes into the day directory. This bot never composes a
+card; it maps a click to a file and replies with it. So step 2's
+`alert_card` / `raw_block` builders are NOT built here; the pure module only
+lists days, loads files, and resolves a `custom_id` or select value to a path.
+
+6. **Views** `src/discord_mod_bot/views.py`: a `discord.ui.View` whose select
+   and button callbacks resolve the interaction's `custom_id` / value to a
+   pre-rendered file under `days/<date>/cards/` (naming and the `custom_id`
+   scheme are defined by pytrade-bot in that day's `run.json` manifest), then
+   reply ephemerally with it; "All 6 exits" and previous / next edit the
+   ephemeral message in place with another pre-rendered file. Attach the view
+   to the phase-1 post and to the `/grade` reply.
+7. **Raw numbers** attaches the per-day CSV pytrade-bot already wrote.
+8. **Glyph emoji**: upload the four verdict glyph PNGs from the design once to
+   the server and hand the emoji ids to the operator; pytrade-bot needs them in
+   its config to render the verdict line.
 
 Phase 3, only after the design is final: switch the sender from classic embeds
 to Components V2 (`IS_COMPONENTS_V2` flag, container with accent color, text
