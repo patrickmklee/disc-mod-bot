@@ -36,7 +36,8 @@ COLOR_RIGHT = 0x00C805
 COLOR_WRONG = 0xFF5000
 COLOR_FLAT = 0x59636E
 
-_ACCURACY_MARK = {"right": "✅", "wrong": "❌", "flat": "➖"}
+# Mirrors GLYPH in pytrade-bot's discord_report.py -- same vocabulary.
+_ACCURACY_MARK = {"right": "✅", "wrong": "❌", "flat": "➖", "unknown": "❔"}
 _ACCURACY_COLOR = {"right": COLOR_RIGHT, "wrong": COLOR_WRONG}
 
 
@@ -115,7 +116,7 @@ def alert_options(records: Iterable[dict[str, Any]]) -> list[dict[str, str]]:
 			"description": _truncate(
 				f"{record.get('lane', '?')}/{record.get('source', '?')}"
 				f" · {record.get('alert_et', '?')} ET"
-				f" · {accuracy or 'ungraded'}",
+				f" · {accuracy}",
 				100,
 			),
 			"value": _truncate(str(record.get("key") or _headline(record)), 100),

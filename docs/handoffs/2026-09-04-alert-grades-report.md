@@ -35,9 +35,19 @@ produces, every trading morning, a ledger outside both repos:
   discord.json      webhook-shaped {"username", "embeds": [...]}; the summary
                     embed references the chart as {"image": {"url": "attachment://tape.png"}}
   tape.png          composite image: contract path per alert + exit-template bars
-  memo.md, alerts.json, disposition.json, run.json
+  memo.md, alerts.json, disposition.json
+  run.json          the poster's manifest: "png" (filename or null when no
+                    contract had bars, so no chart), "partial_intraday" (true
+                    when the day was graded while its session was still open:
+                    not final, do not post), "verdict_version"
 ~/pytrade-signal-grades/rollup_scorecard.json    scorecard across all days
 ```
+
+Poster rules that follow from `run.json`: skip a day whose `partial_intraday`
+is true; when `png` is null post the embeds without the image rather than
+failing (a day with zero contract bars is a legitimate, if poor, day). The
+newest final day is the newest directory whose `run.json` has
+`partial_intraday` false.
 
 The contract between the repos is those files. Layout and every number are
 pytrade-bot's job; this bot reads the files verbatim and adds delivery and
