@@ -105,9 +105,12 @@ replies in-channel. Leave them in place unless cleaning up deliberately.
 ## In-flight work
 
 `docs/handoffs/2026-09-04-alert-grades-report.md` is the plan for the
-alert-grading report. Phases 1 (config, loader, sender, poster, `/grade`)
-and 2 (`views.py`, the click router) are done; phase 3 — switching the day
-post itself to Components V2 — is not.
+alert-grading report. Phases 1 (config, loader, sender, poster, `/grade`),
+2 (`views.py`, the click router) and 3 (the day post sent as pytrade-bot's
+Components V2 `post.json`, with the classic embeds as the fallback) are done.
+The one item left is live intraday mode — the bot editing its own post every
+five minutes until the close — and it is blocked on the operator's data-source
+decision in pytrade-bot#453; do not design it ahead of that decision.
 
 **The click router.** `views.py` sends component arrays pytrade-bot wrote and
 never builds one. `RawView` overrides `to_components` / `has_components_v2`,
