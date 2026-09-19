@@ -54,7 +54,9 @@ uv run pytest
 
 `src/discord_mod_bot/config.yaml` controls which commands are enabled, who
 can run them, and the Discord webhook URLs the bot posts to. Override the
-path with `MOD_BOT_CONFIG_PATH`.
+path with `MOD_BOT_CONFIG_PATH`. The committed file ships with empty webhook
+`url`s: a webhook URL is a bearer token, so a real one belongs only in a
+local copy of the file that `MOD_BOT_CONFIG_PATH` points at, never in git.
 
 ```yaml
 command_prefix: !

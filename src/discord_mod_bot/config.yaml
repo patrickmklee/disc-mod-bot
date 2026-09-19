@@ -17,12 +17,14 @@ commands:
     enabled: true
     allowed-by: admin
 
+# Webhook tokens are secrets: never commit one here. Put a real url in a
+# local copy of this file and point MOD_BOT_CONFIG_PATH at it.
 webhooks:
   report:
     enabled: true
     name: Bikini Bottom News
-    url: webhooks/1494569062674726912/LzDYvTNamyEHk5iiAMkXxoeDq7nmU6s07Sbn367anRsYAVkmIjKu7cMbcNXT41T4tJXd
+    url: ""
   training:
     enabled: true
     name: Patrick
-    url: webhooks/1494116796222148678/aLMuGeWTQKbY3l72zwtODhUJJWgV6ROe5NlqQc1_w4IwpyxNZ9_ILXSnSXE36exaaIkG" 
+    url: ""
