@@ -177,6 +177,23 @@ displays, separators, media gallery for the image). Note the flag disables
 `content` and `embeds` on that message and cannot be removed afterwards, and
 the message budget becomes 40 components. Keep phase 1 as the fallback path.
 
+Phase 3's sender landed 2026-09-04 (PR #5): `send_day_report` decides the
+layout before it sends -- `post.json` whole as one V2 message with the tape
+uploaded beside it, or the phase-1 embeds when there is no post, it is over
+the 40-component budget, it references an `attachment://` this day has no
+file for, or `MOD_BOT_ALERT_GRADES_LAYOUT=classic` forces it. The click layer
+rides inside the container, so `day_view` is not attached on that path and
+the router needed no change. As of 2026-09-09 the V2 path has only been
+dry-run: no real V2 message has been sent yet, so the first
+`post_alert_grades <date>` against a ledger day is also its live check.
+
+Live intraday mode is the one item left and it waits on the operator: the
+data source for intraday grading is undecided in pytrade-bot#453 (decide-by
+2026-09-12), and the operator's note there is to decide before any design of
+live mode. Whatever is decided, the contract this bot will need from the
+grader is a partial day that carries a `post.json` -- today a
+`partial_intraday` day is skipped and none has been written with one.
+
 ## Discord API facts that bound the work
 
 Embeds: 10 per message, 25 fields each, 1024 characters per field value, 6000
